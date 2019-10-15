@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Microsoft.Git.CredentialManager.Commands
@@ -64,7 +65,27 @@ namespace Microsoft.Git.CredentialManager.Commands
 
             // Parse standard input arguments
             // git-credential treats the keys as case-sensitive; so should we.
+#if DEBUG
+            IDictionary<string, string> inputDict = new Dictionary<string, string>();
+            var debugInput = args.Where(a => a.StartsWith("--debug-input=")).FirstOrDefault();
+            if(!string.IsNullOrWhiteSpace(debugInput))
+            {
+                var lines = debugInput.Substring("--debug-input=".Length).Split('\n');
+                lines.ToList().ForEach(l => {
+                    var keyValuePair = l.Split('=');
+                    if(keyValuePair.Length == 2)
+                    {
+                        inputDict.Add(keyValuePair[0], keyValuePair[1]);
+                    }
+                });
+            }
+            else
+            {
+                inputDict = await context.Streams.In.ReadDictionaryAsync(StringComparer.Ordinal);
+            }
+#else           
             IDictionary<string, string> inputDict = await context.Streams.In.ReadDictionaryAsync(StringComparer.Ordinal);
+#endif 
             var input = new InputArguments(inputDict);
 
             // Set the remote URI to scope settings to throughout the process from now on

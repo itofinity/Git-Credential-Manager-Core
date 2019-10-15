@@ -1,0 +1,17 @@
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Bitbucket.Authentication;
+
+namespace Bitbucket
+{
+    public interface IBitbucketRestApi
+    {
+        Task<AuthenticationResult> AcquireTokenAsync(
+            Uri targetUri,
+            string username,
+            string password,
+            string authenticationCode,
+            IEnumerable<string> scopes);
+    }
+}

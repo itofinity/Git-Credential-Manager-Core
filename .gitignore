@@ -337,3 +337,4 @@ out/
 
 # Temporary build directory
 .tmp/
+.history/**/*
