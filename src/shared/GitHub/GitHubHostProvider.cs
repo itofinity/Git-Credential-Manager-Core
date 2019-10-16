@@ -135,7 +135,7 @@ namespace GitHub
             Uri uri = new UriBuilder
             {
                 Scheme = input.Protocol,
-                Host = input.Host,
+                Host = input.CleanHost,
             }.Uri;
 
             return NormalizeUri(uri);

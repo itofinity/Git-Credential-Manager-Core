@@ -129,13 +129,20 @@ namespace Microsoft.Git.CredentialManager
 
         private static Uri GetUriFromInput(InputArguments input)
         {
-            return new UriBuilder
+            var uriBuilder = new UriBuilder
             {
                 Scheme   = input.Protocol,
                 UserName = input.UserName,
-                Host     = input.Host,
+                Host     = input.CleanHost,
                 Path     = input.Path
-            }.Uri;
+            };
+
+            if(input.Port.HasValue)
+            {
+                uriBuilder.Port = input.Port.Value;
+            }
+            
+            return uriBuilder.Uri;
         }
 
         #endregion

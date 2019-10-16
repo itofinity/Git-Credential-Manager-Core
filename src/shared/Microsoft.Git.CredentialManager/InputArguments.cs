@@ -33,6 +33,8 @@ namespace Microsoft.Git.CredentialManager
 
         public string Protocol => GetArgumentOrDefault("protocol");
         public string Host     => GetArgumentOrDefault("host");
+        public string CleanHost => GetCleanHost(Host);
+        public int? Port     => GetPort(Host);
         public string Path     => GetArgumentOrDefault("path");
         public string UserName => GetArgumentOrDefault("username");
         public string Password => GetArgumentOrDefault("password");
@@ -58,14 +60,33 @@ namespace Microsoft.Git.CredentialManager
                 return null;
             }
 
-            var ub = new UriBuilder(Protocol, Host)
+            var ub = new UriBuilder(Protocol, CleanHost)
             {
                 Path = Path
             };
+
+            if(Port.HasValue)
+            {
+                ub.Port = Port.Value;
+            }
 
             return ub.Uri;
         }
 
         #endregion
+
+        private string GetCleanHost(string host)
+        {
+            var parts = host.Split(':');
+            return parts[0];
+        }
+
+        private int? GetPort(string host)
+        {
+            var parts = host.Split(':');
+            if(parts.Length == 2 && Int32.TryParse(parts[1], out int port))
+                return port;
+            return null;
+        }
     }
 }

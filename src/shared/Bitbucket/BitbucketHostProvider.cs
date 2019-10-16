@@ -45,9 +45,10 @@ namespace Bitbucket
         {
             ThrowIfDisposed();
 
-            // Bitbucker Cloud only!!!
+            // TODO Bitbucker Cloud only!!!
             // We should not allow unencrypted communication and should inform the user
-            if (StringComparer.OrdinalIgnoreCase.Equals(input.Protocol, "http"))
+            if (StringComparer.OrdinalIgnoreCase.Equals(input.Protocol, "http") 
+                && "bitbucket.org".Equals(input.Host, StringComparison.InvariantCultureIgnoreCase))
             {
                 throw new Exception("Unencrypted HTTP is not supported for Bitbucket. Ensure the repository remote URL is using HTTPS.");
             }
@@ -162,7 +163,7 @@ Credential credentials = null;
             Uri uri = new UriBuilder
             {
                 Scheme = input.Protocol,
-                Host = input.Host,
+                Host = input.CleanHost,
             }.Uri;
 
             return NormalizeUri(uri);

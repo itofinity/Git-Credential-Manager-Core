@@ -55,6 +55,19 @@
             "stopAtEntry": false,
         },
         {
+            "name": "Git Credential Manager (get) debug-input bitbucket server localhost cmd",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            // If you have changed target frameworks, make sure to update the program path.
+            "program": "${workspaceFolder}/out/shared/Git-Credential-Manager/bin/Debug/netcoreapp2.1/git-credential-manager-core.dll",
+            "args": ["get", "--debug-input=host=localhost:7990\nprotocol=https\ncredential.authority=bitbucket\n\n"],
+            "cwd": "${workspaceFolder}/out/shared/Git-Credential-Manager",
+            "env": {"GCM_TRACE":"1","GIT_TRACE":"1"},
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+        },
+        {
             "name": ".NET Core Attach",
             "type": "coreclr",
             "request": "attach",

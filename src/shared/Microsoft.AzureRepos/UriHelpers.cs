@@ -84,7 +84,7 @@ namespace Microsoft.AzureRepos
             var ub = new UriBuilder
             {
                 Scheme = input.Protocol,
-                Host = input.Host,
+                Host = input.CleanHost,
             };
 
             // Extract the organization name for Azure ('dev.azure.com') style URLs.
