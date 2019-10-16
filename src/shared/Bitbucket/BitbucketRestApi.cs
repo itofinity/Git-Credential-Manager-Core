@@ -80,19 +80,22 @@ namespace Bitbucket
                 }
             }
         }
-
+  
         private async Task<AuthenticationResult> ParseSuccessResponseAsync(Uri targetUri, HttpResponseMessage response)
         {
             GitCredential token = null;
             string responseText = await response.Content.ReadAsStringAsync();
 
             Match tokenMatch;
-            if ((tokenMatch = Regex.Match(responseText, @"\s*""token""\s*:\s*""([^""]+)""\s*",
+            // TODO use compiled regex, switch regex based on Uri Bbc vs BbS
+            if ((tokenMatch = Regex.Match(responseText, BitbucketServerConstants.PersonalAccessTokenRegexCommand
+            ,
                     RegexOptions.CultureInvariant | RegexOptions.IgnoreCase)).Success
-                && tokenMatch.Groups.Count > 1)
+                && tokenMatch.Groups.Count > 2)
             {
-                string tokenText = tokenMatch.Groups[1].Value;
-                token = new GitCredential(Constants.PersonalAccessTokenUserName, tokenText);
+                var userName = tokenMatch.Groups[1].Value;               
+                string tokenText = tokenMatch.Groups[2].Value;
+                token = new GitCredential(userName, tokenText);
             }
 
             if (token == null)

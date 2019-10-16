@@ -50,6 +50,7 @@
             "program": "${workspaceFolder}/out/shared/Git-Credential-Manager/bin/Debug/netcoreapp2.1/git-credential-manager-core.dll",
             "args": ["get", "--debug-input=host=stash.atlassian.com\nprotocol=https\ncredential.authority=bitbucket\n\n"],
             "cwd": "${workspaceFolder}/out/shared/Git-Credential-Manager",
+            "env": {"GCM_TRACE":"1","GIT_TRACE":"1"},
             "console": "integratedTerminal",
             "stopAtEntry": false,
         },

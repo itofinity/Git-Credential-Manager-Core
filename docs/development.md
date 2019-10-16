@@ -29,3 +29,11 @@ Xcode and Apple SDKs Agreement
 PLEASE SCROLL DOWN AND READ ALL OF ...
 
 Software License Agreements Press 'space' for more, or 'q' to quit
+
+
+# publish/install
+
+dotnet publish --configuration=MacDebug
+
+sudo installer -pkg /Users/mminns/projects/github.com/mminns/Git-Credential-Manager-Core/out/osx/Installer.Mac/pkg/Debug/gcmcore-osx-2.0.79.24926.pkg -target /
+
