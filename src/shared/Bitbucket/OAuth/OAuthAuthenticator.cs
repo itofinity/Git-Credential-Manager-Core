@@ -8,24 +8,30 @@ using GitCredCfg  = Microsoft.Git.CredentialManager.Constants.GitConfiguration.C
 
 namespace Bitbucket.OAuth
 {
-    public class OAuthAuthenticator : IAuthenticator
+    public class OAuthAuthenticator : IAuthenticator, IBitbucket
     {
         private CommandContext _context;
+        private readonly IBitbucketRestApi _bitbucketServerApi;
+        private readonly IBitbucketRestApi _bitbucketApi;
 
         public OAuthAuthenticator(CommandContext context)
         {
             _context = context;
+            _bitbucketApi = new Cloud.BitbucketRestApi(context);
+            _bitbucketServerApi = new Server.BitbucketRestApi(context);
         }
 
         private IOAuthAuthenticator GetAuthenticator()
         {
-            if (string.IsNullOrWhiteSpace(BbSConsumerKey) && string.IsNullOrWhiteSpace(BbSConsumerSecret))
+            if (IsCloud)
             {
                 // bitbucket.org
                 return new v2.OAuthAuthenticator(_context);
             }
-
-            return new v1.OAuthAuthenticator(_context, BbSConsumerKey, BbSConsumerSecret);
+            else
+            {
+                return new v1.OAuthAuthenticator(_context, BbSConsumerKey, BbSConsumerSecret);
+            }
         }
 
 
@@ -51,5 +57,21 @@ namespace Bitbucket.OAuth
             GitCredCfg.SectionName, 
             BitbucketServerGitConfiguration.OAuth.BbSConsumerSecret, 
             out string consumerKey) ? consumerKey : null;
+
+        public bool IsCloud => RemoteUrl.Contains("bitbucket.org");
+
+        public string RemoteUrl => _context.Settings.RemoteUri.AbsoluteUri;
+
+        public async Task<AuthenticationResult> AquireUserDetailsAsync(Uri targetUri, string token)
+        {
+            if(IsCloud)
+            {
+                return await _bitbucketApi.AcquireUserDetailsAsync(targetUri, token);
+            }
+            else
+            {
+                return await _bitbucketServerApi.AcquireUserDetailsAsync(targetUri, token);
+            }
+        }
     }
 }

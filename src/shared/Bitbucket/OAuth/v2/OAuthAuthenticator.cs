@@ -279,7 +279,9 @@ namespace Bitbucket.OAuth.v2
 
         private Uri GetAuthorizationUri(IEnumerable<string> scopes)
         {
-            const string AuthorizationUrl = "{0}?response_type=code&client_id={1}&state=authenticated&scope={2}&redirect_uri={3}";
+            const string AuthorizationUrl = "{0}?response_type=code&client_id={1}&state=authenticated&redirect_uri={3}";
+            // HACK in GCMW it includes scopes but it was erroring here for some reason so drop the scopes
+            //  "{0}?response_type=code&client_id={1}&state=authenticated&scope={2}&redirect_uri={3}";
 
             var authorityUrl = string.Format(System.Globalization.CultureInfo.InvariantCulture,
                                              AuthorizationUrl,

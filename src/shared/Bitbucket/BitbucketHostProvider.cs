@@ -8,7 +8,7 @@ using GitCredCfg  = Microsoft.Git.CredentialManager.Constants.GitConfiguration.C
 
 namespace Bitbucket
 {
-    public class BitbucketHostProvider : HostProvider
+    public class BitbucketHostProvider : HostProvider, IBitbucket
     {
         private static readonly string[] BitbucketCredentialScopes =
         {
@@ -55,7 +55,7 @@ namespace Bitbucket
         {
             ThrowIfDisposed();
 
-            // TODO Bitbucker Cloud only!!!
+            // TODO Bitbucket Cloud only!!!
             // We should not allow unencrypted communication and should inform the user
             if (StringComparer.OrdinalIgnoreCase.Equals(input.Protocol, "http") 
                 && "bitbucket.org".Equals(input.Host, StringComparison.InvariantCultureIgnoreCase))
@@ -86,7 +86,7 @@ TODO auto refresh
               //  targetUri, credentials.UserName, credentials.Password, "", BitbucketCredentialScopes);
 
             // TODO BbS doesn't tel us if 2FA is 'on' so rely on configuration
-            var useOAuth = ForceOAuth(Context.Settings);
+            var useOAuth = ForceOAuth;
 
             // if 2FA is on for BbS there is no point trying for a PAT via username/password
             // the multiple 3rd implementations means there arte two many variables in what might come back
@@ -99,7 +99,7 @@ TODO auto refresh
                 //AuthenticationResult result = await _bitbucketApi.AcquireTokenAsync(
                 //targetUri, credentials.UserName, credentials.Password, "", BitbucketServerCredentialScopes);
                 AuthenticationResult result = await _basicAuthAuthenticator.AcquireTokenAsync(
-                targetUri, BitbucketServerCredentialScopes, 
+                targetUri, Scopes, 
                 credentials);
 
                 if (result.Type == AuthenticationResultType.Success)
@@ -118,18 +118,19 @@ TODO auto refresh
 
             if(useOAuth)
             {
-                // ask user for credentials
-                ICredential credentials = await _bitbucketAuth.GetCredentialsAsync(targetUri);
+                Context.Terminal.WriteLine("OAuth for '{0}'...", targetUri); 
 
                 AuthenticationResult result = await _oauthAuthenticator.AcquireTokenAsync(
-                    targetUri, BitbucketServerCredentialScopes, 
-                    credentials);
+                    targetUri, Scopes, 
+                    new GitCredential("not used", "anywhere"));
                 
                 if (result.Type == AuthenticationResultType.Success)
                 {
                     Context.Trace.WriteLine($"Token acquisition for '{targetUri}' succeeded");
 
-                    return result.Token;
+                    var usernameResult = await _oauthAuthenticator.AquireUserDetailsAsync(targetUri, result.Token.Password);
+
+                    return usernameResult.Token;
                 }
             }
 
@@ -202,13 +203,16 @@ Credential credentials = null;
             BitbucketServerGitConfiguration.OAuth.BbSConsumerSecret, 
             out string consumerKey) ? consumerKey : null;
 
-        private bool ForceOAuth(ISettings settings)
-        {
-            // TODO this only applies to BbS
-            return !string.IsNullOrWhiteSpace(BbSConsumerKey) && 
-                !string.IsNullOrWhiteSpace(BbSConsumerSecret);
 
-        }
+        public bool ForceOAuth => IsCloud || IsServerOAuth;
+
+        public bool IsServerOAuth => !string.IsNullOrWhiteSpace(BbSConsumerKey) && !string.IsNullOrWhiteSpace(BbSConsumerSecret);
+
+        public bool IsCloud => RemoteUrl.Contains("bitbucket.org");
+
+        public string RemoteUrl => Context.Settings.RemoteUri.AbsoluteUri;
+
+        public string[] Scopes =>  IsCloud ? BitbucketCredentialScopes : BitbucketServerCredentialScopes;
 
         public override string GetCredentialKey(InputArguments input)
         {

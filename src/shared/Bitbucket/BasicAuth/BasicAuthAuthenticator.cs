@@ -32,7 +32,9 @@ namespace Bitbucket.BasicAuth
             EnsureArgument.NotNull(context, nameof(context));
             _context = context;
 
-            _bitbucketServerApi = new BitbucketRestApi(context);
+            _bitbucketServerApi = new Server.BitbucketRestApi(context);
+
+            _bitbucketApi = new Cloud.BitbucketRestApi(context);
 
         }
         public async Task<AuthenticationResult> AcquireTokenAsync(Uri targetUri, IEnumerable<string> scopes, ICredential credentials)

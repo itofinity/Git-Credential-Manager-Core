@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 using Microsoft.Git.CredentialManager;
 using static System.StringComparer;
 
-namespace Bitbucket
+namespace Bitbucket.Cloud
 {
     public class BitbucketRestApi : IBitbucketRestApi
     {
@@ -55,7 +55,7 @@ namespace Bitbucket
                     {
                         case HttpStatusCode.OK:
                         case HttpStatusCode.Created:
-                            return await ParseSuccessResponseAsync(targetUri, response);
+                            return await ParseAquireTokenSuccessResponseAsync(targetUri, response);
                         case HttpStatusCode.Forbidden:
                             {
                                 // Bitbucket Cloud
@@ -82,7 +82,7 @@ namespace Bitbucket
             }
         }
 
-        private async Task<AuthenticationResult> ParseSuccessResponseAsync(Uri targetUri, HttpResponseMessage response)
+        private async Task<AuthenticationResult> ParseAquireTokenSuccessResponseAsync(Uri targetUri, HttpResponseMessage response)
         {
             GitCredential token = null;
             string responseText = await response.Content.ReadAsStringAsync();
@@ -135,6 +135,20 @@ namespace Bitbucket
                 // If we're here, it's Bitbucket Server via a configured provider/authority
                 var baseUrl = targetUri.AbsoluteUri; // TODO ? targetUri.GetLeftPart(UriPartial.Authority);
                 return new Uri(baseUrl + $"/rest/access-tokens/1.0/users/{userName}");
+            }
+        }
+
+        private Uri GetUserDetailsRequestUri(Uri targetUri)
+        {
+            if (targetUri.DnsSafeHost.Equals(BitbucketConstants.BitbucketBaseUrlHost, StringComparison.OrdinalIgnoreCase))
+            {
+                return new Uri("https://api.bitbucket.org/2.0/user");
+            }
+            else
+            {
+                // If we're here, it's Bitbucket Server via a configured provider/authority
+                var baseUrl = targetUri.AbsoluteUri; // TODO ? targetUri.GetLeftPart(UriPartial.Authority);
+                return new Uri(baseUrl + $"/rest/access-tokens/1.0/users/");
             }
         }
 
@@ -204,6 +218,85 @@ namespace Bitbucket
         public void Dispose()
         {
             _httpClient?.Dispose();
+        }
+
+        public async Task<AuthenticationResult> AcquireUserDetailsAsync(Uri targetUri, string token)
+        {
+            if (targetUri is null)
+                throw new ArgumentNullException(nameof(targetUri));
+            if (token is null)
+                throw new ArgumentNullException(nameof(token));
+
+            Uri requestUri = GetUserDetailsRequestUri(targetUri);
+
+            using (var request = new HttpRequestMessage(HttpMethod.Get, requestUri))
+            {
+                // Set the auth header
+                request.Headers.Authorization = new AuthenticationHeaderValue(Constants.Http.WwwAuthenticateBearerScheme, token);
+                request.Headers.Add("Accept", "*/*");
+
+                using (var response = await HttpClient.SendAsync(request))
+                {
+                    // TODO logging Trace.WriteLine($"server responded with {response.StatusCode}.");
+
+                    switch (response.StatusCode)
+                {
+                    case HttpStatusCode.OK:
+                    case HttpStatusCode.Created:
+                        {
+                            // TODO logging Trace.WriteLine("authentication success: new password token created.");
+
+                            // Get username to cross check against supplied one
+                            return await ParseAquireUserDetailsSuccessResponseAsync(requestUri, response, token);
+                        }
+
+                    case HttpStatusCode.Forbidden:
+                        {
+                            // A 403/Forbidden response indicates the username/password are
+                            // recognized and good but 2FA is on in which case we want to
+                            // indicate that with the TwoFactor result
+                            // TODO logging Trace.WriteLine("two-factor app authentication code required");
+                            return new AuthenticationResult(AuthenticationResultType.TwoFactor);
+                        }
+                    case HttpStatusCode.Unauthorized:
+                        {
+                            // username or password are wrong.
+                            // TODO logging Trace.WriteLine("authentication unauthorized");
+                            return new AuthenticationResult(AuthenticationResultType.Failure);
+                        }
+
+                    default:
+                        // any unexpected result can be treated as a failure.
+                        // TODO logging Trace.WriteLine("authentication failed");
+                        return new AuthenticationResult(AuthenticationResultType.Failure);
+                }
+                }
+            }
+        }
+
+        private async Task<AuthenticationResult> ParseAquireUserDetailsSuccessResponseAsync(Uri targetUri, HttpResponseMessage response, string token)
+        {
+            string username = null;
+            string responseText = await response.Content.ReadAsStringAsync();
+
+            Match usernameMatch;
+            if ((usernameMatch = UsernameRegex.Match(responseText)).Success
+                && usernameMatch.Groups.Count > 1)
+            {
+                username = usernameMatch.Groups[1].Value;
+                // TODO logging Trace.WriteLine($"Found username [{usernameText}]");
+            }
+
+            if (username == null)
+            {
+                _context.Trace.WriteLine($"Get user details for '{targetUri}' failed.");
+                return new AuthenticationResult(AuthenticationResultType.Failure);
+            }
+            else
+            {
+                _context.Trace.WriteLine($"Get user details for '{targetUri}' succeeded.");
+                return new AuthenticationResult(AuthenticationResultType.Success, new GitCredential(username, token));
+            }
         }
 
         #endregion

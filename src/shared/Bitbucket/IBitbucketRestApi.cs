@@ -12,5 +12,7 @@ namespace Bitbucket
             string password,
             string authenticationCode,
             IEnumerable<string> scopes);
+
+        Task<AuthenticationResult> AcquireUserDetailsAsync(Uri targetUri, string token);
     }
 }
