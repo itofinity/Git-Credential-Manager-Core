@@ -9,7 +9,6 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Bitbucket.Authentication;
 using Microsoft.Git.CredentialManager;
 using static System.StringComparer;
 
@@ -31,7 +30,7 @@ namespace Bitbucket
 
             this._context = context;
         }
-        
+
 
         public async Task<AuthenticationResult> AcquireTokenAsync(Uri targetUri, string username, string password, string authenticationCode, IEnumerable<string> scopes)
         {
@@ -47,7 +46,7 @@ namespace Bitbucket
                 // Set the auth header
                 request.Headers.Authorization = new AuthenticationHeaderValue(Constants.Http.WwwAuthenticateBasicScheme, base64Cred);
                 request.Headers.Add("Accept", "*/*");
-                
+
                 using (var response = await HttpClient.SendAsync(request))
                 {
                     // TODO logging Trace.WriteLine($"server responded with {response.StatusCode}.");
@@ -59,28 +58,30 @@ namespace Bitbucket
                             return await ParseSuccessResponseAsync(targetUri, response);
                         case HttpStatusCode.Forbidden:
                             {
+                                // Bitbucket Cloud
                                 // A 403/Forbidden response indicates the username/password are
                                 // recognized and good but 2FA is on in which case we want to
                                 // indicate that with the TwoFactor result
                                 // TODO logging Trace.WriteLine("two-factor app authentication code required");
-                                return new AuthenticationResult(BitbucketAuthenticationResultType.TwoFactor);
+                                return new AuthenticationResult(AuthenticationResultType.TwoFactor);
                             }
                         case HttpStatusCode.Unauthorized:
                             {
                                 // username or password are wrong.
                                 // TODO logging Trace.WriteLine("authentication unauthorized");
-                                return new AuthenticationResult(BitbucketAuthenticationResultType.Failure);
+                                return new AuthenticationResult(AuthenticationResultType.Failure);
                             }
 
                         default:
                             // any unexpected result can be treated as a failure.
                             // TODO logging Trace.WriteLine("authentication failed");
-                            return new AuthenticationResult(BitbucketAuthenticationResultType.Failure);
+                            string responseText = await response.Content.ReadAsStringAsync();
+                            return new AuthenticationResult(AuthenticationResultType.Failure);
                     }
                 }
             }
         }
-  
+
         private async Task<AuthenticationResult> ParseSuccessResponseAsync(Uri targetUri, HttpResponseMessage response)
         {
             GitCredential token = null;
@@ -93,7 +94,7 @@ namespace Bitbucket
                     RegexOptions.CultureInvariant | RegexOptions.IgnoreCase)).Success
                 && tokenMatch.Groups.Count > 2)
             {
-                var userName = tokenMatch.Groups[1].Value;               
+                var userName = tokenMatch.Groups[1].Value;
                 string tokenText = tokenMatch.Groups[2].Value;
                 token = new GitCredential(userName, tokenText);
             }
@@ -101,27 +102,13 @@ namespace Bitbucket
             if (token == null)
             {
                 _context.Trace.WriteLine($"Authentication for '{targetUri}' failed.");
-                return new AuthenticationResult(BitbucketAuthenticationResultType.Failure);
+                return new AuthenticationResult(AuthenticationResultType.Failure);
             }
             else
             {
                 _context.Trace.WriteLine($"Authentication success: new personal access token for '{targetUri}' created.");
-                return new AuthenticationResult(BitbucketAuthenticationResultType.Success, token);
+                return new AuthenticationResult(AuthenticationResultType.Success, token);
             }
-        }
-
-        private string FindUsername(string responseText)
-        {
-            Match usernameMatch;
-            if ((usernameMatch = UsernameRegex.Match(responseText)).Success
-                && usernameMatch.Groups.Count > 1)
-            {
-                string usernameText = usernameMatch.Groups[1].Value;
-                // TODO logging Trace.WriteLine($"Found username [{usernameText}]");
-                return usernameText;
-            }
-
-            return null;
         }
 
         private HttpContent GetTokenJsonContent(Uri targetUri, IEnumerable<string> scopes)
@@ -145,8 +132,8 @@ namespace Bitbucket
             }
             else
             {
-                // If we're here, it's Bitbucket EnServerterpServer rise via a configured provider/authority
-                var baseUrl = targetUri.GetLeftPart(UriPartial.Authority);
+                // If we're here, it's Bitbucket Server via a configured provider/authority
+                var baseUrl = targetUri.AbsoluteUri; // TODO ? targetUri.GetLeftPart(UriPartial.Authority);
                 return new Uri(baseUrl + $"/rest/access-tokens/1.0/users/{userName}");
             }
         }
@@ -162,7 +149,7 @@ namespace Bitbucket
                 && (content.Headers.ContentType.MediaType.StartsWith("text/", StringComparison.OrdinalIgnoreCase)
                     || content.Headers.ContentType.MediaType.EndsWith("/json", StringComparison.OrdinalIgnoreCase)))
             {
-                
+
 
                 if (content.Headers.ContentEncoding.Any(e => OrdinalIgnoreCase.Equals("gzip", e)))
                 {
@@ -187,7 +174,7 @@ namespace Bitbucket
                     asString = await content.ReadAsStringAsync();
                 }
             }
-            
+
             return asString;
         }
 

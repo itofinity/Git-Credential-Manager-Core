@@ -78,6 +78,17 @@ namespace Microsoft.Git.CredentialManager
         /// <param name="isDeprecatedConfiguration">True if the proxy configuration method is deprecated, false otherwise.</param>
         /// <returns>Proxy setting, or null if not configured.</returns>
         Uri GetProxyConfiguration(out bool isDeprecatedConfiguration);
+
+        /// <summary>
+        /// Try and get the value of a specified setting as specified in the environment and Git configuration,
+        /// with the environment taking precedence over Git.
+        /// </summary>
+        /// <param name="envarName">Optional environment variable name.</param>
+        /// <param name="section">Optional Git configuration section name.</param>
+        /// <param name="property">Git configuration property name. Required if <paramref name="section"/> is set, optional otherwise.</param>
+        /// <param name="value">Value of the requested setting.</param>
+        /// <returns>True if a setting value was found, false otherwise.</returns>
+        bool TryGetSetting(string envarName, string section, string property, out string value);
     }
 
     public class Settings : ISettings

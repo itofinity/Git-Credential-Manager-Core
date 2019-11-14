@@ -24,9 +24,11 @@
 **/
 
 using System;
+using System.IO;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using Bitbucket.Helpers;
 
 namespace Bitbucket.OAuth
@@ -36,7 +38,6 @@ namespace Bitbucket.OAuth
     /// </summary>
     public class SimpleServer
     {
-        private const string htmlSuccessPage = "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><title>SourceTree Authentication</title><link rel=\"stylesheet\" href=\"http://aui-cdn.atlassian.com/aui-adg/5.9.19/css/aui.min.css\" media=\"all\"><script src=\"http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js\"></script><script src=\"http://aui-cdn.atlassian.com/aui-adg/5.9.19/js/aui.min.js\"></script></head><body class=\"aui-page-notification aui-page-size-large\"><div id=\"page\"><div class=\"aui-page-panel\"><div class=\"aui-page-panel-inner\"><section class=\"aui-page-panel-content\"><h2>Authentication Successful</h2><p>SourceTree has been successfully authenticated. You may now close this page.</p></section></div></div><footer id=\"footer\" role=\"contentinfo\"><section class=\"footer-body\"><ul><li>&hearts;</li></ul><div id=\"footer-logo\"><a href=\"http://www.atlassian.com/\" target=\"_blank\">Atlassian</a></div></section></footer></div></body></html>";
         /// <summary>
         /// Async wait for an URL with a timeout
         /// </summary>
@@ -52,14 +53,14 @@ namespace Bitbucket.OAuth
             string rawUrl = "";
             try
             {
-                var context = await listener.GetContextAsync().RunWithCancellation(cancellationToken);
+                var context = await listener.GetContextAsync().RunWithCancellation(cancellationToken).ConfigureAwait(false);
                 rawUrl = context.Request.RawUrl;
 
                 // Serve back a simple authentication message.
                 var html = GetSuccessString();
                 var buffer = System.Text.Encoding.UTF8.GetBytes(html);
                 context.Response.ContentLength64 = buffer.Length;
-                await context.Response.OutputStream.WriteAsync(buffer, 0, buffer.Length, cancellationToken);
+                await context.Response.OutputStream.WriteAsync(buffer, 0, buffer.Length, cancellationToken).ConfigureAwait(false);
                 context.Response.Close();
             }
             catch (TimeoutException ex)
@@ -86,7 +87,28 @@ namespace Bitbucket.OAuth
         /// <returns></returns>
         private static string GetSuccessString()
         {
-            return htmlSuccessPage;
+            var result = "Authentication Successful. You may now close this page";
+
+            try
+            {
+                var assembly = typeof(SimpleServer).Assembly;
+                var htmlStream = assembly.GetManifestResourceStream("Bitbucket.Authentication.Assets.auth.html");
+
+                if (htmlStream != null)
+                {
+                    using (StreamReader reader = new StreamReader(htmlStream))
+                    {
+                        result = reader.ReadToEnd();
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                return result;
+            }
+
+            return result;
         }
     }
 }

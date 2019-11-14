@@ -61,6 +61,11 @@ namespace Microsoft.Git.CredentialManager.Tests.Objects
             isDeprecatedConfiguration = IsDeprecatedProxyConfiguration;
             return ProxyConfiguration;
         }
+        public bool TryGetSetting(string envarName, string section, string property, out string value)
+        {
+            value = null;
+            return false;
+        }
 
         #endregion
 

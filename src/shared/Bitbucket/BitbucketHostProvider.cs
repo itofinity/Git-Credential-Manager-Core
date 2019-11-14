@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Bitbucket.Authentication;
 using Microsoft.Git.CredentialManager;
+using Bitbucket.BasicAuth;
+using Bitbucket.OAuth;
+using GitCredCfg  = Microsoft.Git.CredentialManager.Constants.GitConfiguration.Credential;
 
 namespace Bitbucket
 {
@@ -19,19 +21,27 @@ namespace Bitbucket
             BitbucketServerConstants.TokenScopes.RepositoryWrite
         };
 
-        private readonly IBitbucketRestApi _bitbucketApi;
+        //private readonly IBitbucketRestApi _bitbucketApi;
         private readonly IBitbucketAuthentication _bitbucketAuth;
 
-        public BitbucketHostProvider(CommandContext context)
-            : this(context, new BitbucketRestApi(context), new BitbucketAuthentication(context)) { }
+        private readonly BasicAuthAuthenticator _basicAuthAuthenticator;
+        private readonly OAuthAuthenticator _oauthAuthenticator;
 
-        public BitbucketHostProvider(ICommandContext context, IBitbucketRestApi bitbucketApi, IBitbucketAuthentication bitbucketAuth)
+        public BitbucketHostProvider(CommandContext context)
+            : this(context, new BasicAuthAuthenticator(context), new OAuthAuthenticator(context), new BitbucketAuthentication(context)) { }
+
+        public BitbucketHostProvider(ICommandContext context, BasicAuthAuthenticator basicAuthAuthenticator, 
+        OAuthAuthenticator oauthAuthenticator,
+        IBitbucketAuthentication bitbucketAuth)
             : base(context)
         {
-            EnsureArgument.NotNull(bitbucketApi, nameof(bitbucketApi));
+            EnsureArgument.NotNull(basicAuthAuthenticator, nameof(basicAuthAuthenticator));
+            EnsureArgument.NotNull(oauthAuthenticator, nameof(oauthAuthenticator));
             EnsureArgument.NotNull(bitbucketAuth, nameof(bitbucketAuth));
 
-            _bitbucketApi = bitbucketApi;
+            //_bitbucketApi = bitbucketApi;
+            _basicAuthAuthenticator = basicAuthAuthenticator;
+            _oauthAuthenticator = oauthAuthenticator;
             _bitbucketAuth = bitbucketAuth;
         }
 
@@ -71,22 +81,59 @@ TODO auto refresh
             Credential refreshedCredentials = await RefreshCredentials(targetUri, refreshCredentials.Password, null);
 */
 
-            // ask user for credentials
-            ICredential credentials = await _bitbucketAuth.GetCredentialsAsync(targetUri);
-
             // TODO Bitbucket CLoud
             //AuthenticationResult result = await _bitbucketApi.AcquireTokenAsync(
               //  targetUri, credentials.UserName, credentials.Password, "", BitbucketCredentialScopes);
 
-            AuthenticationResult result = await _bitbucketApi.AcquireTokenAsync(
-                targetUri, credentials.UserName, credentials.Password, "", BitbucketServerCredentialScopes);
+            // TODO BbS doesn't tel us if 2FA is 'on' so rely on configuration
+            var useOAuth = ForceOAuth(Context.Settings);
 
-            if (result.Type == BitbucketAuthenticationResultType.Success)
+            // if 2FA is on for BbS there is no point trying for a PAT via username/password
+            // the multiple 3rd implementations means there arte two many variables in what might come back
+            if(!useOAuth)
             {
-                Context.Trace.WriteLine($"Token acquisition for '{targetUri}' succeeded");
+                // ask user for credentials
+                ICredential credentials = await _bitbucketAuth.GetCredentialsAsync(targetUri);
 
-                return result.Token;
+                // BbC or BbS with out 2FA configured at the client
+                //AuthenticationResult result = await _bitbucketApi.AcquireTokenAsync(
+                //targetUri, credentials.UserName, credentials.Password, "", BitbucketServerCredentialScopes);
+                AuthenticationResult result = await _basicAuthAuthenticator.AcquireTokenAsync(
+                targetUri, BitbucketServerCredentialScopes, 
+                credentials);
+
+                if (result.Type == AuthenticationResultType.Success)
+                {
+                    Context.Trace.WriteLine($"Token acquisition for '{targetUri}' succeeded");
+
+                    return result.Token;
+                }
+
+                if (result.Type == AuthenticationResultType.TwoFactor)
+                {
+                    // TODO BbC said 2FA is 'on'
+                    useOAuth = true;
+                }
             }
+
+            if(useOAuth)
+            {
+                // ask user for credentials
+                ICredential credentials = await _bitbucketAuth.GetCredentialsAsync(targetUri);
+
+                AuthenticationResult result = await _oauthAuthenticator.AcquireTokenAsync(
+                    targetUri, BitbucketServerCredentialScopes, 
+                    credentials);
+                
+                if (result.Type == AuthenticationResultType.Success)
+                {
+                    Context.Trace.WriteLine($"Token acquisition for '{targetUri}' succeeded");
+
+                    return result.Token;
+                }
+            }
+
+            
 /*
 Credential credentials = null;
             string username;
@@ -145,6 +192,24 @@ Credential credentials = null;
             throw new Exception($"Interactive logon for '{targetUri}' failed.");
         }
 
+        public string BbSConsumerKey => Context.Settings.TryGetSetting(BitbucketServerEnvironmentVariables.BbsConsumerKey, 
+            GitCredCfg.SectionName, 
+            BitbucketServerGitConfiguration.OAuth.BbSConsumerKey, 
+            out string consumerKey) ? consumerKey : null;
+            
+        public string BbSConsumerSecret => Context.Settings.TryGetSetting(BitbucketServerEnvironmentVariables.BbsConsumerSecret, 
+            GitCredCfg.SectionName, 
+            BitbucketServerGitConfiguration.OAuth.BbSConsumerSecret, 
+            out string consumerKey) ? consumerKey : null;
+
+        private bool ForceOAuth(ISettings settings)
+        {
+            // TODO this only applies to BbS
+            return !string.IsNullOrWhiteSpace(BbSConsumerKey) && 
+                !string.IsNullOrWhiteSpace(BbSConsumerSecret);
+
+        }
+
         public override string GetCredentialKey(InputArguments input)
         {
             string url = GetTargetUri(input).AbsoluteUri;
@@ -160,11 +225,19 @@ Credential credentials = null;
 
         private static Uri GetTargetUri(InputArguments input)
         {
-            Uri uri = new UriBuilder
+            UriBuilder uriBuilder = new UriBuilder
             {
                 Scheme = input.Protocol,
                 Host = input.CleanHost,
-            }.Uri;
+                Path = input.Path
+            };
+            
+            if(input.Port.HasValue)
+            {
+                uriBuilder.Port = input.Port.Value;
+            }
+
+            Uri uri = uriBuilder.Uri;
 
             return NormalizeUri(uri);
         }

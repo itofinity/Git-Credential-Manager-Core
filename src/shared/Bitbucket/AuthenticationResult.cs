@@ -26,7 +26,7 @@
 using System.Diagnostics;
 using Microsoft.Git.CredentialManager;
 
-namespace Bitbucket.Authentication
+namespace Bitbucket
 {
     /// <summary>
     /// Defines the properties of interest of the results of an Authentication attempt.
@@ -34,7 +34,7 @@ namespace Bitbucket.Authentication
     [DebuggerDisplay("{Type}")]
     public struct AuthenticationResult
     {
-        public AuthenticationResult(BitbucketAuthenticationResultType type)
+        public AuthenticationResult(AuthenticationResultType type)
         {
             Type = type;
             Token = null;
@@ -42,7 +42,7 @@ namespace Bitbucket.Authentication
             RemoteUsername = null;
         }
 
-        public AuthenticationResult(BitbucketAuthenticationResultType type, string username)
+        public AuthenticationResult(AuthenticationResultType type, string username)
         {
             Type = type;
             Token = null;
@@ -50,7 +50,7 @@ namespace Bitbucket.Authentication
             RemoteUsername = username;
         }
 
-        public AuthenticationResult(BitbucketAuthenticationResultType type, GitCredential token)
+        public AuthenticationResult(AuthenticationResultType type, GitCredential token)
         {
             Type = type;
             Token = token;
@@ -58,7 +58,7 @@ namespace Bitbucket.Authentication
             RemoteUsername = null;
         }
 
-        public AuthenticationResult(BitbucketAuthenticationResultType type, GitCredential token, string username)
+        public AuthenticationResult(AuthenticationResultType type, GitCredential token, string username)
         {
             Type = type;
             Token = token;
@@ -66,7 +66,7 @@ namespace Bitbucket.Authentication
             RemoteUsername = username;
         }
 
-        public AuthenticationResult(BitbucketAuthenticationResultType type, GitCredential accessToken,
+        public AuthenticationResult(AuthenticationResultType type, GitCredential accessToken,
             GitCredential refreshToken)
         {
             Type = type;
@@ -75,7 +75,7 @@ namespace Bitbucket.Authentication
             RemoteUsername = null;
         }
 
-        public AuthenticationResult(BitbucketAuthenticationResultType type, GitCredential accessToken,
+        public AuthenticationResult(AuthenticationResultType type, GitCredential accessToken,
             GitCredential refreshToken, string remoteUsername)
         {
             Type = type;
@@ -84,7 +84,7 @@ namespace Bitbucket.Authentication
             RemoteUsername = remoteUsername;
         }
 
-        public readonly BitbucketAuthenticationResultType Type;
+        public readonly AuthenticationResultType Type;
         public GitCredential Token { get; internal set; }
         public GitCredential RefreshToken { get; internal set; }
         public string RemoteUsername { get; internal set; }
@@ -94,20 +94,20 @@ namespace Bitbucket.Authentication
         /// </summary>
         public bool IsSuccess
         {
-            get { return Type.Equals(BitbucketAuthenticationResultType.Success); }
+            get { return Type.Equals(AuthenticationResultType.Success); }
         }
 
         public static implicit operator bool(AuthenticationResult result)
         {
-            return result.Type == BitbucketAuthenticationResultType.Success;
+            return result.Type == AuthenticationResultType.Success;
         }
 
-        public static implicit operator BitbucketAuthenticationResultType(AuthenticationResult result)
+        public static implicit operator AuthenticationResultType(AuthenticationResult result)
         {
             return result.Type;
         }
 
-        public static implicit operator AuthenticationResult(BitbucketAuthenticationResultType type)
+        public static implicit operator AuthenticationResult(AuthenticationResultType type)
         {
             return new AuthenticationResult(type);
         }
@@ -116,7 +116,7 @@ namespace Bitbucket.Authentication
     /// <summary>
     /// Defines the types of Authentication results we care about.
     /// </summary>
-    public enum BitbucketAuthenticationResultType
+    public enum AuthenticationResultType
     {
         None,
         Success,

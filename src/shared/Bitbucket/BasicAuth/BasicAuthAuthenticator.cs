@@ -1,39 +1,64 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Bitbucket.Authentication;
 using Microsoft.Git.CredentialManager;
+using Bitbucket.Auth;
 
 namespace Bitbucket.BasicAuth
 {
     /// <summary>
     ///     Provides the functionality for validating basic auth credentials with Bitbucket.org
     /// </summary>
-    public class BasicAuthAuthenticator
+    public class BasicAuthAuthenticator : IAuthenticator
     {
-        private CommandContext _context;
+        // TODO duplicated
+        private static readonly string[] BitbucketCredentialScopes =
+        {
+            BitbucketConstants.TokenScopes.SnippetWrite,
+            BitbucketConstants.TokenScopes.RepositoryWrite
+        };
 
-        public async Task<AuthenticationResult> GetAuthAsync(Uri targetUri, IEnumerable<string> scopes, int requestTimeout, Uri restRootUrl, GitCredential credentials)
+        private static readonly string[] BitbucketServerCredentialScopes =
+        {
+            BitbucketServerConstants.TokenScopes.RepositoryWrite
+        };
+
+        private CommandContext _context;
+        private readonly IBitbucketRestApi _bitbucketServerApi;
+        private readonly IBitbucketRestApi _bitbucketApi;
+
+        public BasicAuthAuthenticator(CommandContext context)
+        { 
+            EnsureArgument.NotNull(context, nameof(context));
+            _context = context;
+
+            _bitbucketServerApi = new BitbucketRestApi(context);
+
+        }
+        public async Task<AuthenticationResult> AcquireTokenAsync(Uri targetUri, IEnumerable<string> scopes, ICredential credentials)
+        {
+            if (targetUri.AbsoluteUri.Contains("bitbucket.org")/* TODO Rest.Cloud.RestClient.IsAcceptableUri(targetUri)*/)
+            {
+                return await GetCloudAuthAsync(targetUri, scopes, credentials);
+            }
+            else
+            {
+                return await GetServerAuthAsync(targetUri, scopes, credentials);
+            }
+        }
+
+        private async Task<AuthenticationResult> GetServerAuthAsync(Uri targetUri, IEnumerable<string> scopes, ICredential credentials)
         {
             // Use the provided username and password and attempt a basic authentication request to a known REST API resource.
-            var result = await ( new BitbucketRestApi(_context)).AcquireTokenAsync(targetUri, credentials.UserName, credentials.Password, "", scopes);
+            //var result = await (new Rest.Server.RestClient(Context)).TryGetUser(targetUri, requestTimeout, restRootUrl, credentials);
+            return await _bitbucketServerApi.AcquireTokenAsync(
+                targetUri, credentials.UserName, credentials.Password, "", BitbucketServerCredentialScopes);
+        }
 
-            if (result.Type.Equals(BitbucketAuthenticationResultType.Success))
-            {
-                // Success with username/password indicates 2FA is not on so the 'token' is actually
-                // the password if we had a successful call then the password is good.
-                var token = new GitCredential(credentials.UserName, credentials.Password);
-                if (!string.IsNullOrWhiteSpace(result.RemoteUsername) && !credentials.UserName.Equals(result.RemoteUsername))
-                {
-                    // TOD Logging Trace.WriteLine($"remote username [{result.RemoteUsername}] != [{credentials.UserName}] supplied username");
-                    return new AuthenticationResult(BitbucketAuthenticationResultType.Success, token, result.RemoteUsername);
-                }
-
-                return new AuthenticationResult(BitbucketAuthenticationResultType.Success, token);
-            }
-
-            // TODO logging Trace.WriteLine("authentication failed");
-            return result;
+        public async Task<AuthenticationResult> GetCloudAuthAsync(Uri targetUri, IEnumerable<string> scopes, ICredential credentials)
+        {
+            return await _bitbucketApi.AcquireTokenAsync(
+                targetUri, credentials.UserName, credentials.Password, "", BitbucketCredentialScopes);
         }
     }
 }

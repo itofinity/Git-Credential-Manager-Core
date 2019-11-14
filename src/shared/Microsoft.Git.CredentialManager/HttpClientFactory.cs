@@ -69,6 +69,9 @@ namespace Microsoft.Git.CredentialManager
                 handler = new HttpClientHandler();
             }
 
+            // TODO
+            //handler.AllowAutoRedirect = false;
+
             if (!_settings.IsCertificateVerificationEnabled)
             {
                 _trace.WriteLine("TLS certificate verification has been disabled.");

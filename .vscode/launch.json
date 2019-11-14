@@ -10,7 +10,7 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/out/shared/Git-Credential-Manager/bin/Debug/netcoreapp2.1/git-credential-manager-core.dll",
+            "program": "${workspaceFolder}/out/shared/Git-Credential-Manager/bin/Debug/netcoreapp3.0/git-credential-manager-core.dll",
             "args": ["get"],
             "cwd": "${workspaceFolder}/out/shared/Git-Credential-Manager",
             "console": "integratedTerminal",
@@ -22,7 +22,7 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/out/shared/Git-Credential-Manager/bin/Debug/netcoreapp2.1/git-credential-manager-core.dll",
+            "program": "${workspaceFolder}/out/shared/Git-Credential-Manager/bin/Debug/netcoreapp3.0/git-credential-manager-core.dll",
             "args": ["get", "--debug-input=host=bitbucket.org\nprotocol=https\n\n"],
             "cwd": "${workspaceFolder}/out/shared/Git-Credential-Manager",
             "console": "integratedTerminal",
@@ -34,7 +34,7 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/out/shared/Git-Credential-Manager/bin/Debug/netcoreapp2.1/git-credential-manager-core.dll",
+            "program": "${workspaceFolder}/out/shared/Git-Credential-Manager/bin/Debug/netcoreapp3.0/git-credential-manager-core.dll",
             "args": ["get", "--debug-input=host=1.2.3.4/bitbucket\nprotocol=https\n\n"],
             "cwd": "${workspaceFolder}/out/shared/Git-Credential-Manager",
             "env": {"GCM_PROVIDER":"bitbucket"},
@@ -47,7 +47,7 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/out/shared/Git-Credential-Manager/bin/Debug/netcoreapp2.1/git-credential-manager-core.dll",
+            "program": "${workspaceFolder}/out/shared/Git-Credential-Manager/bin/Debug/netcoreapp3.0/git-credential-manager-core.dll",
             "args": ["get", "--debug-input=host=stash.atlassian.com\nprotocol=https\ncredential.authority=bitbucket\n\n"],
             "cwd": "${workspaceFolder}/out/shared/Git-Credential-Manager",
             "env": {"GCM_TRACE":"1","GIT_TRACE":"1"},
@@ -60,8 +60,8 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/out/shared/Git-Credential-Manager/bin/Debug/netcoreapp2.1/git-credential-manager-core.dll",
-            "args": ["get", "--debug-input=host=localhost:7990\nprotocol=https\ncredential.authority=bitbucket\n\n"],
+            "program": "${workspaceFolder}/out/shared/Git-Credential-Manager/bin/Debug/netcoreapp3.0/git-credential-manager-core.dll",
+            "args": ["get", "--debug-input=host=localhost:7990\nprotocol=http\npath=bitbucket\n\n"],
             "cwd": "${workspaceFolder}/out/shared/Git-Credential-Manager",
             "env": {"GCM_TRACE":"1","GIT_TRACE":"1"},
             "console": "integratedTerminal",

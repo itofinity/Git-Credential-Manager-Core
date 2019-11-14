@@ -12,6 +12,7 @@
             "args": [
                 "build",
                 "${workspaceFolder}/Git-Credential-Manager.sln",
+                "/property:GenerateFullPaths=true"
             ],
             "problemMatcher": "$msCompile"
         },
@@ -25,7 +26,26 @@
             },
             "args": [
                 "test",
-                "${workspaceFolder}/Git-Credential-Manager.sln"
+                "${workspaceFolder}/Git-Credential-Manager.sln",
+                "/property:GenerateFullPaths=true"
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "version",
+            "command": "dotnet",
+            "type": "shell",
+            "group":{
+                "kind": "test",
+                "isDefault": true
+            },
+            "args": [
+                "--version",
+                "${workspaceFolder}/Git-Credential-Manager.sln",
+                "/property:GenerateFullPaths=true"
             ],
             "presentation": {
                 "reveal": "always",
