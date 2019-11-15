@@ -10,13 +10,13 @@ namespace Bitbucket
 {
     public class BitbucketHostProvider : HostProvider, IBitbucket
     {
-        private static readonly string[] BitbucketCredentialScopes =
+        public static readonly string[] BitbucketCredentialScopes =
         {
             BitbucketConstants.TokenScopes.SnippetWrite,
             BitbucketConstants.TokenScopes.RepositoryWrite
         };
 
-        private static readonly string[] BitbucketServerCredentialScopes =
+        public static readonly string[] BitbucketServerCredentialScopes =
         {
             BitbucketServerConstants.TokenScopes.RepositoryWrite
         };

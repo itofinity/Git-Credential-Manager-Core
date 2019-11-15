@@ -68,6 +68,19 @@
             "stopAtEntry": false,
         },
         {
+            "name": "blah",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            // If you have changed target frameworks, make sure to update the program path.
+            "program": "${workspaceFolder}/out/shared/Bitbucket.Authentication.Helper/bin/Debug/netcoreapp3.0/Bitbucket.Authentication.Helper.dll",
+            "args": ["--prompt", "authcode"],
+            "cwd": "${workspaceFolder}/out/shared/Git-Credential-Manager",
+            "env": {"GCM_TRACE":"1","GIT_TRACE":"1"},
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+        },
+        {
             "name": ".NET Core Attach",
             "type": "coreclr",
             "request": "attach",

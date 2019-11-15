@@ -1,0 +1,14 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="Atlassian_Authentication_Helper_App.Views.AuthCodeWindow"
+        Title="AuthCode">
+        <StackPanel Margin="10">
+                <StackPanel Orientation="Horizontal" Margin="10">
+                    <Button Width="160" Margin="10" Command="{Binding AuthenticateCommand}" CommandParameter="Button">Authenticate</Button>
+                    <Button Width="160" Margin="10" Command="{Binding CancelCommand}" CommandParameter="Button">Cancel</Button>
+                </StackPanel>            
+            </StackPanel>
+</Window>
