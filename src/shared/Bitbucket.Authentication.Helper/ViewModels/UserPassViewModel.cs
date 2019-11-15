@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Reactive;
 using ReactiveUI;
 using Bitbucket;
@@ -9,6 +10,10 @@ namespace Atlassian_Authentication_Helper_App.ViewModels
 {
     public class UserPassViewModel : ReactiveObject, IAuthViewModel
     {
+        public event EventHandler ExitEvent;
+
+        private Dictionary<string, string> _output = new Dictionary<string, string>();
+
         public UserPassViewModel(CommandContext context)
         {
             var authenticator = new BasicAuthAuthenticator(context);
@@ -25,23 +30,34 @@ namespace Atlassian_Authentication_Helper_App.ViewModels
                 if (result.Type == AuthenticationResultType.Success)
                 {
                     context.Trace.WriteLine($"Token acquisition for '{targetUri}' succeeded");
+                    
+                    _output.Add("username", result.Token.UserName);
+                    _output.Add("password", result.Token.Password);
 
                     Success = true;
                 }
                 else
                 {
-                    Console.WriteLine("oops");
                     context.Trace.WriteLine($"Token acquisition for '{targetUri}' failed");
                     Success = false;
                 }
 
-                
+                Exit();
             });
 
             CancelCommand = ReactiveCommand.Create<object>(param =>
             {
                 Success = false;
+                Exit();
             });
+        }
+
+        public void Exit()
+        {
+            if (ExitEvent != null)
+            {
+                ExitEvent(this, new EventArgs());
+            }
         }
 
         private string _username;
@@ -64,7 +80,12 @@ namespace Atlassian_Authentication_Helper_App.ViewModels
 
         public ReactiveCommand<object, Unit> CancelCommand { get; }
 
-        public string Response => $"username={_username}{Environment.NewLine}password={_password}";
+        public Dictionary<string,string> Output {
+            get
+            {
+                return _output;
+            }
+        }
 
         public bool Success { get; private set; }
     }

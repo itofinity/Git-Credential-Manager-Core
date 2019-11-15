@@ -2,6 +2,7 @@ using Atlassian_Authentication_Helper_App.ViewModels;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using System;
 
 namespace Atlassian_Authentication_Helper_App.Views
 {
@@ -10,6 +11,13 @@ namespace Atlassian_Authentication_Helper_App.Views
         public AuthCodeWindow()
         {
             InitializeComponent();
+            this.DataContextChanged += (s,e) =>
+                {
+                    ViewModel.ExitEvent += (s,e) =>
+                        {
+                            this.Close();
+                        };
+                };
         }
 
         public override bool Success => true;

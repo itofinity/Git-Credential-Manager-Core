@@ -48,14 +48,8 @@ namespace Atlassian_Authentication_Helper_App
 
                             if (viewModel.Success)
                             {
-                                Console.WriteLine(viewModel.Response);
+                                context.Streams.Out.WriteDictionary(viewModel.Output);
                             }
-                            else
-                            {
-                                Console.WriteLine();
-                            }
-
-                            Console.WriteLine();
                         }        
 
                         return 0;

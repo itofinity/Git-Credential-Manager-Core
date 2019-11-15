@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using System;
+using System.Collections.Generic;
 
 namespace Atlassian_Authentication_Helper_App.Views
 {
@@ -11,6 +12,13 @@ namespace Atlassian_Authentication_Helper_App.Views
         public UserPassWindow()
         {
             InitializeComponent();
+            this.DataContextChanged += (s,e) =>
+                {
+                    ViewModel.ExitEvent += (s,e) =>
+                        {   
+                            this.Close();
+                        };
+                };
         }
 
         public override bool Success => true;
