@@ -37,3 +37,10 @@
 
 1. linux testing
     1. secret storage
+
+
+
+
+BTW for single file apps
+    
+    dotnet publish -f netcoreapp3.0 -r osx-x64 -c Release /p:PublishSingleFile=true /p:PublishTrimmed=true
