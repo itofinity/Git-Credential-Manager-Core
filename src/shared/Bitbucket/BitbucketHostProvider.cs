@@ -118,77 +118,38 @@ TODO auto refresh
 
             if(useOAuth)
             {
-                Context.Terminal.WriteLine("OAuth for '{0}'...", targetUri); 
+                var authCode = await _bitbucketAuth.GetAuthenticationCodeAsync(targetUri);
 
-                AuthenticationResult result = await _oauthAuthenticator.AcquireTokenAsync(
+                // For BbC don't need and App Password/PAT as OAuth token can be used, so this only triggers if there is no GUI helper.
+                if(string.IsNullOrWhiteSpace(authCode))
+                {
+                    Context.Terminal.WriteLine("Acquiring OAuth token for '{0}'...", targetUri); 
+
+                    AuthenticationResult result = await _oauthAuthenticator.AcquireTokenAsync(
                     targetUri, Scopes, 
                     new GitCredential("not used", "anywhere"));
+
+                    if (result.Type == AuthenticationResultType.Success)
+                    {
+                        Context.Trace.WriteLine($"Token acquisition for '{targetUri}' succeeded");
+                        Context.Terminal.WriteLine("... OAuth token for '{0}' acquired", targetUri); 
+                        authCode = result.Token.Password;
+                    }
+                }
                 
-                if (result.Type == AuthenticationResultType.Success)
+                
+                if (!string.IsNullOrWhiteSpace(authCode))
                 {
                     Context.Trace.WriteLine($"Token acquisition for '{targetUri}' succeeded");
 
-                    var usernameResult = await _oauthAuthenticator.AquireUserDetailsAsync(targetUri, result.Token.Password);
+                    var usernameResult = await _oauthAuthenticator.AquireUserDetailsAsync(targetUri, authCode);
 
-                    return usernameResult.Token;
-                }
-            }
-
-            
-/*
-Credential credentials = null;
-            string username;
-            string password;
-
-            // Ask the user for basic authentication credentials
-            if (AcquireCredentialsCallback("Please enter your Bitbucket credentials for ", targetUri, out username, out password))
-            {
-                AuthenticationResult result;
-                credentials = new Credential(username, password);
-
-                if (result = await BitbucketAuthority.AcquireToken(targetUri, credentials, AuthenticationResultType.None, TokenScope))
-                {
-                    Trace.WriteLine("token acquisition succeeded");
-
-                    credentials = GenerateCredentials(targetUri, username, ref result);
-                    await SetCredentials(targetUri, credentials, username);
-
-                    // If a result callback was registered, call it.
-                    AuthenticationResultCallback?.Invoke(targetUri, result);
-
-                    return credentials;
-                }
-                else if (result == AuthenticationResultType.TwoFactor)
-                {
-                    // Basic authentication attempt returned a result indicating the user has 2FA on so prompt
-                    // the user to run the OAuth dance.
-                    if (AcquireAuthenticationOAuthCallback("", targetUri, result, username))
+                    if(usernameResult.IsSuccess)
                     {
-                        if (result = await BitbucketAuthority.AcquireToken(targetUri, credentials, AuthenticationResultType.TwoFactor, TokenScope))
-                        {
-                            Trace.WriteLine("token acquisition succeeded");
-
-                            credentials = GenerateCredentials(targetUri, username, ref result);
-
-                            await SetCredentials(targetUri, credentials, username);
-
-                            await SetCredentials(GetRefreshTokenTargetUri(targetUri), 
-                                                 new Credential(result.RefreshToken.Type.ToString(),
-                                                                result.RefreshToken.Value),
-                                                 username);
-
-                            // If a result callback was registered, call it.
-                            AuthenticationResultCallback?.Invoke(targetUri, result);
-
-                            return credentials;
-                        }
+                        return usernameResult.Token;
                     }
                 }
             }
-
-*/
-
-
 
             throw new Exception($"Interactive logon for '{targetUri}' failed.");
         }

@@ -14,6 +14,7 @@
   <ItemGroup>
     <ProjectReference Include="../Microsoft.Authentication.Helper.Mac/Microsoft.Authentication.Helper.Mac.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="../../shared/Git-Credential-Manager/Git-Credential-Manager.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="../../shared/Bitbucket.Authentication.Helper/Bitbucket.Authentication.Helper.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
   <!-- Implicit SDK targets import (so we can override the default targets below) -->

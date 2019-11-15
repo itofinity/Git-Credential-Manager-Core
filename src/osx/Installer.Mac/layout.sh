@@ -21,10 +21,11 @@ SRC="$ROOT/src"
 OUT="$ROOT/out"
 INSTALLER_SRC="$SRC/osx/Installer.Mac"
 MSAUTH_OUT="$OUT/osx/Microsoft.Authentication.Helper.Mac"
+ATLASBBAUTH_OUT="$OUT/shared/Bitbucket.Authentication.Helper"
 GCM_SRC="$SRC/shared/Git-Credential-Manager"
 
 # Build parameters
-FRAMEWORK=netcoreapp2.1
+FRAMEWORK=netcoreapp3.0
 RUNTIME=osx-x64
 
 # Parse script arguments
@@ -63,6 +64,12 @@ if [ ! -d "$MSAUTH_BIN" ]; then
 	die "No native helper binaries found. Did you build?"
 fi
 
+ATLASBBAUTH_BIN="$ATLASBBAUTH_OUT/bin/$CONFIGURATION/netcoreapp3.0/osx-x64/publish/"
+#ATLASBBAUTH_SYM="$ATLASBBAUTH_OUT/bin/$CONFIGURATION/netcoreapp3.0/osx-x64/publish/Bitbucket.Authentication.Helper.pdb"
+if [ ! -d "$ATLASBBAUTH_BIN" ]; then
+	die "No bitbucket native helper binaries found. Did you build? $ATLASBBAUTH_BIN"
+fi
+
 # Cleanup any old payload directory
 if [ -d "$PAYLOAD" ]; then
     echo "Cleaning old payload directory '$PAYLOAD'..."
@@ -79,6 +86,7 @@ cp "$INSTALLER_SRC/uninstall.sh" "$PAYLOAD" || exit 1
 # Copy native authentication helper executables
 echo "Copying native helpers..."
 cp -R "$MSAUTH_BIN/" "$PAYLOAD" || exit 1
+cp -R "$ATLASBBAUTH_BIN/" "$PAYLOAD" || exit 1
 
 # Publish core application executables
 echo "Publishing core application..."
@@ -93,6 +101,7 @@ echo "Collecting managed symbols..."
 mv "$PAYLOAD"/*.pdb "$SYMBOLOUT" || exit 1
 echo "Collecting native symbols..."
 cp -R "$MSAUTH_SYM/" "$SYMBOLOUT" || exit 1
+#cp -R "$ATLASBBAUTH_SYM/" "$SYMBOLOUT" || exit 1
 
 # Remove any unwanted .DS_Store files
 echo "Removing unnecessary files..."

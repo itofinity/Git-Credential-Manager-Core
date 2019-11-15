@@ -50,7 +50,24 @@ namespace Bitbucket
             return new GitCredential(userName, password);
         }
 
-// HACK cut'n'paste from GitGHubAuthentication
+        public async Task<string> GetAuthenticationCodeAsync(Uri targetUri)
+        {
+            if (TryFindHelperExecutablePath(out string helperPath))
+            {
+                IDictionary<string, string> resultDict = await InvokeHelperAsync(helperPath, "--prompt authcode", null);
+
+                if (!resultDict.TryGetValue("authcode", out string authCode))
+                {
+                    throw new Exception("Missing authentication code in response");
+                }
+
+                return authCode;
+            }
+
+            return null;
+        }
+
+        // HACK cut'n'paste from GitGHubAuthentication
         private bool TryFindHelperExecutablePath(out string path)
         {
             string helperName = BitbucketConstants.AuthHelperName;

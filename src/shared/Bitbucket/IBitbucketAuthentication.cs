@@ -8,6 +8,6 @@ namespace Bitbucket
     {
         Task<ICredential> GetCredentialsAsync(Uri targetUri);
 
-        //Task<string> GetAuthenticationCodeAsync(Uri targetUri, bool isSms);
+        Task<string> GetAuthenticationCodeAsync(Uri targetUri);
     }
 }
