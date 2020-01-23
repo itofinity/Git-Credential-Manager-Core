@@ -1,20 +1,21 @@
-using Atlassian_Authentication_Helper_App.ViewModels;
+using Atlassian.Authentication.Helper.ViewModels;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using System;
+using System.Collections.Generic;
 
-namespace Atlassian_Authentication_Helper_App.Views
+namespace Atlassian.Authentication.Helper.Views
 {
-    public class AuthCodeWindow : AbstractAuthWindow, IAuthWindow
+    public class UserPassWindow : AbstractAuthWindow, IAuthWindow
     {
-        public AuthCodeWindow()
+        public UserPassWindow()
         {
             InitializeComponent();
             this.DataContextChanged += (s,e) =>
                 {
                     ViewModel.ExitEvent += (s,e) =>
-                        {
+                        {   
                             this.Close();
                         };
                 };
@@ -22,7 +23,7 @@ namespace Atlassian_Authentication_Helper_App.Views
 
         public override bool Success => true;
 
-        public override string Response => "authcode=12345";
+        public override string Response => $"username=abcde{Environment.NewLine}password=123345";
 
         private void InitializeComponent()
         {
@@ -33,7 +34,7 @@ namespace Atlassian_Authentication_Helper_App.Views
         {
             get
             {
-                return (IAuthViewModel) this.DataContext;
+                return (IAuthViewModel)this.DataContext;
             }
         }
     }

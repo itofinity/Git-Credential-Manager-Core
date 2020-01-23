@@ -34,16 +34,13 @@ namespace Bitbucket.Cloud
 
         public async Task<AuthenticationResult> AcquireTokenAsync(Uri targetUri, string username, string password, string authenticationCode, IEnumerable<string> scopes)
         {
-            Uri requestUri = GetAuthenticationRequestUri(targetUri, username);
-            string base64Cred = new GitCredential(username, password).ToBase64String();
-
-            _context.Trace.WriteLine($"HTTP: POST {requestUri}");
             using (HttpContent content = GetTokenJsonContent(targetUri, scopes))
-            using (var request = new HttpRequestMessage(HttpMethod.Put, requestUri))
+            using (var request = GetHttpRequestMessage(targetUri, username))
             {
                 // set content
                 request.Content = content;
                 // Set the auth header
+                string base64Cred = new GitCredential(username, password).ToBase64String();
                 request.Headers.Authorization = new AuthenticationHeaderValue(Constants.Http.WwwAuthenticateBasicScheme, base64Cred);
                 request.Headers.Add("Accept", "*/*");
 
@@ -80,6 +77,27 @@ namespace Bitbucket.Cloud
                     }
                 }
             }
+        }
+
+        private HttpRequestMessage GetHttpRequestMessage(Uri targetUri, string userName)
+        {
+            if (targetUri.DnsSafeHost.Equals(BitbucketConstants.BitbucketBaseUrlHost, StringComparison.OrdinalIgnoreCase))
+            {
+                var requestUri = new Uri("https://api.bitbucket.org/2.0/user");
+                return GetHttpRequestMessage(HttpMethod.Get, requestUri);
+            }
+            else
+            {
+                // If we're here, it's Bitbucket Server via a configured provider/authority
+                var requestUri = new Uri(targetUri.AbsoluteUri + $"/rest/access-tokens/1.0/users/{userName}");
+                return GetHttpRequestMessage(HttpMethod.Put, requestUri);
+            }
+        }
+
+        private HttpRequestMessage GetHttpRequestMessage(HttpMethod method, Uri uri)
+        {
+                _context.Trace.WriteLine($"HTTP: {method} {uri}");
+                return new HttpRequestMessage(method, uri);
         }
 
         private async Task<AuthenticationResult> ParseAquireTokenSuccessResponseAsync(Uri targetUri, HttpResponseMessage response)
@@ -122,20 +140,6 @@ namespace Bitbucket.Cloud
             string jsonContent = string.Format(JsonContentFormat, scopesJson, targetUri, Environment.MachineName, DateTime.Now);
 
             return new StringContent(jsonContent, Encoding.UTF8, HttpJsonContentType);
-        }
-
-        private Uri GetAuthenticationRequestUri(Uri targetUri, string userName)
-        {
-            if (targetUri.DnsSafeHost.Equals(BitbucketConstants.BitbucketBaseUrlHost, StringComparison.OrdinalIgnoreCase))
-            {
-                return new Uri("https://api.github.com/authorizations");
-            }
-            else
-            {
-                // If we're here, it's Bitbucket Server via a configured provider/authority
-                var baseUrl = targetUri.AbsoluteUri; // TODO ? targetUri.GetLeftPart(UriPartial.Authority);
-                return new Uri(baseUrl + $"/rest/access-tokens/1.0/users/{userName}");
-            }
         }
 
         private Uri GetUserDetailsRequestUri(Uri targetUri)

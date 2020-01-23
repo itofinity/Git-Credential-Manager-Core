@@ -1,6 +1,6 @@
-﻿using System;
-using Atlassian_Authentication_Helper_App.ViewModels;
-using Atlassian_Authentication_Helper_App.Views;
+﻿using System.Linq;
+using Atlassian.Authentication.Helper.ViewModels;
+using Atlassian.Authentication.Helper.Views;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Logging.Serilog;
@@ -9,8 +9,9 @@ using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Git.CredentialManager;
 using Bitbucket.BasicAuth;
 using Bitbucket.OAuth;
+using Bitbucket;
 
-namespace Atlassian_Authentication_Helper_App
+namespace Atlassian.Authentication.Helper
 {
     class Program
     {
@@ -32,7 +33,10 @@ namespace Atlassian_Authentication_Helper_App
         {
             var cla = new CommandLineApplication();
             cla.HelpOption();
-            var optionPromptType = cla.Option("-p|--prompt <USERPASS,AUTHCODE>", "The prompt type", CommandOptionType.SingleValue);
+            var optionPromptType = cla.Option("-p|--prompt <USERPASS,AUTHCODE>", "The prompt type",
+            CommandOptionType.SingleValue);
+            var optionHostUrl = cla.Option("-h|--host <HOST_URL>", "The URL of the target host, displayed to the user and used to determine host type",
+            CommandOptionType.SingleValue);
 
             cla.OnExecute(() =>
                     {
@@ -40,17 +44,22 @@ namespace Atlassian_Authentication_Helper_App
                             ? optionPromptType.Value()
                             : "userpass";
 
+                        var hostUrl = optionHostUrl.HasValue()
+                            ? optionHostUrl.Value()
+                            : BitbucketConstants.BitbucketBaseUrl; // default to https://bitbucket.org
+
                         using (var context = new CommandContext())
                         {
-                            var viewModel = GetViewModel(prompt, context);
-                            var window = GetWindow(prompt, viewModel);
+                            var viewModel = GetViewModel(prompt, hostUrl, context);
+                            var window = GetWindow(viewModel);
                             app.Run(window);
 
-                            if (viewModel.Success)
+                            if (viewModel.Output != null 
+                                    && viewModel.Output.Any())
                             {
                                 context.Streams.Out.WriteDictionary(viewModel.Output);
                             }
-                        }        
+                        }
 
                         return 0;
                     });
@@ -58,25 +67,25 @@ namespace Atlassian_Authentication_Helper_App
             var result = cla.Execute(args);
         }
 
-        private static IAuthViewModel GetViewModel(string prompt, CommandContext context)
+        private static IAuthViewModel GetViewModel(string prompt, string hostUrl, CommandContext context)
         {
             switch (prompt.ToLower())
             {
                 case "authcode":
-                    return new AuthCodeViewModel(context);
+                    return new AuthCodeViewModel(hostUrl, context);
                 case "userpass":
                 default:
-                    return new UserPassViewModel(context);
+                    return new UserPassViewModel(hostUrl, context);
             }
         }
 
-        private static Window GetWindow(string prompt, IAuthViewModel viewModel)
+        private static Window GetWindow(IAuthViewModel viewModel)
         {
-            switch (prompt.ToLower())
+            switch (viewModel.GetType().Name.ToLower())
             {
-                case "authcode":
+                case "authcodeviewmodel":
                     return new AuthCodeWindow() { DataContext = viewModel };
-                case "userpass":
+                case "userpassviewmodel":
                 default:
                     return new UserPassWindow() { DataContext = viewModel };
             }

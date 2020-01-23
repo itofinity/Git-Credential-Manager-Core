@@ -3,8 +3,9 @@ namespace Bitbucket
     public static class BitbucketConstants
     {
         public const string BitbucketBaseUrlHost = "bitbucket.org";
+        public const string BitbucketBaseUrl = "https://bitbucket.org";
 
-        public const string AuthHelperName = "Bitbucket.Authentication.Helper";
+        public const string AuthHelperName = "Atlassian.Authentication.Helper";
 
         /// <summary>
         /// The Bitbucket required HTTP accepts header value

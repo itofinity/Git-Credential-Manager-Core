@@ -6,17 +6,15 @@ using Microsoft.Git.CredentialManager;
 using Bitbucket;
 using Bitbucket.OAuth;
 
-namespace Atlassian_Authentication_Helper_App.ViewModels
+namespace Atlassian.Authentication.Helper.ViewModels
 {
-    public class AuthCodeViewModel : ReactiveObject, IAuthViewModel
+    public class AuthCodeViewModel : AbstractAuthViewModel
     {
-        public event EventHandler ExitEvent;
-        private Dictionary<string, string> _output = new Dictionary<string, string>();
-
-        public AuthCodeViewModel(CommandContext context)
+        public AuthCodeViewModel(string hostUrl, CommandContext context) : base(hostUrl)
         {
-            var targetUri = new Uri("https://bitbucket.org");
+            var targetUri = new Uri(hostUrl);
             context.Settings.RemoteUri = targetUri;
+
             var authenticator = new OAuthAuthenticator(context);
 
             AuthenticateCommand = ReactiveCommand.Create<object>(async param =>
@@ -37,7 +35,8 @@ namespace Atlassian_Authentication_Helper_App.ViewModels
                     if (usernameResult.Type == AuthenticationResultType.Success)
                     {
                         _output.Add("username", usernameResult.Token.UserName);
-                        _output.Add("authcode", result.Token.Password);
+                        _output.Add("accesstoken", result.Token.Password);
+                        _output.Add("refreshtoken", result.RefreshToken.Password);
 
                         Success = true;
                     }
@@ -65,14 +64,6 @@ namespace Atlassian_Authentication_Helper_App.ViewModels
             });
         }
 
-        public void Exit()
-        {
-            if (ExitEvent != null)
-            {
-                ExitEvent(this, new EventArgs());
-            }
-        }
-
         public ReactiveCommand<object, Unit> AuthenticateCommand { get; }
 
         public ReactiveCommand<object, Unit> CancelCommand { get; }
@@ -80,13 +71,6 @@ namespace Atlassian_Authentication_Helper_App.ViewModels
         public string Authcode { get; private set; }
         public string Username { get; private set; }
 
-        public Dictionary<string,string> Output {
-            get
-            {
-                return _output;
-            }
-        }
 
-        public bool Success { get; private set; }
     }
 }

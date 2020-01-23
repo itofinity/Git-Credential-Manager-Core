@@ -21,7 +21,7 @@ SRC="$ROOT/src"
 OUT="$ROOT/out"
 INSTALLER_SRC="$SRC/osx/Installer.Mac"
 MSAUTH_OUT="$OUT/osx/Microsoft.Authentication.Helper.Mac"
-ATLASBBAUTH_OUT="$OUT/shared/Bitbucket.Authentication.Helper"
+ATLASBBAUTH_OUT="$OUT/shared/Atlassian.Authentication.Helper"
 GCM_SRC="$SRC/shared/Git-Credential-Manager"
 
 # Build parameters
@@ -65,7 +65,7 @@ if [ ! -d "$MSAUTH_BIN" ]; then
 fi
 
 ATLASBBAUTH_BIN="$ATLASBBAUTH_OUT/bin/$CONFIGURATION/netcoreapp3.0/osx-x64/publish/"
-#ATLASBBAUTH_SYM="$ATLASBBAUTH_OUT/bin/$CONFIGURATION/netcoreapp3.0/osx-x64/publish/Bitbucket.Authentication.Helper.pdb"
+#ATLASBBAUTH_SYM="$ATLASBBAUTH_OUT/bin/$CONFIGURATION/netcoreapp3.0/osx-x64/publish/Atlassian.Authentication.Helper.pdb"
 if [ ! -d "$ATLASBBAUTH_BIN" ]; then
 	die "No bitbucket native helper binaries found. Did you build? $ATLASBBAUTH_BIN"
 fi

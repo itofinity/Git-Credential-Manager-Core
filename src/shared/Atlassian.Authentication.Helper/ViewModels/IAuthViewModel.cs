@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 
 
-namespace Atlassian_Authentication_Helper_App.ViewModels
+namespace Atlassian.Authentication.Helper.ViewModels
 {
     public interface IAuthViewModel
     {

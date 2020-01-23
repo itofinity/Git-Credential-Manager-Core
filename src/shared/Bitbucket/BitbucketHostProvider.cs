@@ -126,8 +126,9 @@ TODO auto refresh
                     Context.Terminal.WriteLine("Acquiring OAuth token for '{0}'...", targetUri); 
 
                     AuthenticationResult result = await _oauthAuthenticator.AcquireTokenAsync(
-                    targetUri, Scopes, 
-                    new GitCredential("not used", "anywhere"));
+                                                    targetUri, 
+                                                    Scopes, 
+                                                    new GitCredential("not used", "anywhere"));
 
                     if (result.Type == AuthenticationResultType.Success)
                     {

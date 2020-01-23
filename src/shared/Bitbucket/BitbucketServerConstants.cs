@@ -4,7 +4,7 @@ namespace Bitbucket
 {
     public static class BitbucketServerConstants
     {
-        public const string AuthHelperName = "Bitbucket.Authentication.Helper";
+        public const string AuthHelperName = "Atlassian.Authentication.Helper";
 
         /// <summary>
         /// The Bitbucket required HTTP accepts header value

@@ -56,7 +56,7 @@ namespace Bitbucket
             {
                 IDictionary<string, string> resultDict = await InvokeHelperAsync(helperPath, "--prompt authcode", null);
 
-                if (!resultDict.TryGetValue("authcode", out string authCode))
+                if (!resultDict.TryGetValue("accesstoken", out string authCode))
                 {
                     throw new Exception("Missing authentication code in response");
                 }

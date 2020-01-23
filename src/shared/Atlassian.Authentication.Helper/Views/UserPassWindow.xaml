@@ -4,10 +4,13 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="240"
         Width="400" Height="240"
-        x:Class="Atlassian_Authentication_Helper_App.Views.UserPassWindow"
+        x:Class="Atlassian.Authentication.Helper.Views.UserPassWindow"
         Title="UserPass">
     <StackPanel Margin="10">
         <Image Source="/Assets/ecosystem-gradient-blue@2x.png"/>
+        <StackPanel Margin="10">
+            <TextBlock Text="{Binding Path=HostUrl}" TextAlignment="Center"/>
+        </StackPanel>
         <Border Classes="TextBox">
             <TextBox Watermark="Username" Text="{Binding Path=Username}"/>
         </Border>

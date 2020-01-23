@@ -1,4 +1,4 @@
-namespace Atlassian_Authentication_Helper_App
+namespace Atlassian.Authentication.Helper
 {
     public interface IAuthWindow
     {

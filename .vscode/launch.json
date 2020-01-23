@@ -68,12 +68,12 @@
             "stopAtEntry": false,
         },
         {
-            "name": "Bitbucket.Authentication.Helper --prompt authcode",
+            "name": "Atlassian.Authentication.Helper --prompt authcode",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/out/shared/Bitbucket.Authentication.Helper/bin/Debug/netcoreapp3.0/Bitbucket.Authentication.Helper.dll",
+            "program": "${workspaceFolder}/out/shared/Atlassian.Authentication.Helper/bin/Debug/netcoreapp3.0/Atlassian.Authentication.Helper.dll",
             "args": ["--prompt", "authcode"],
             "cwd": "${workspaceFolder}/out/shared/Git-Credential-Manager",
             "env": {"GCM_TRACE":"1","GIT_TRACE":"1"},
@@ -81,12 +81,44 @@
             "stopAtEntry": false,
         },
         {
-            "name": "Bitbucket.Authentication.Helper --prompt userpass",
+            "name": "Atlassian.Authentication.Helper --prompt authcode --host=https://bitbucket.org",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/out/shared/Bitbucket.Authentication.Helper/bin/Debug/netcoreapp3.0/Bitbucket.Authentication.Helper.dll",
+            "program": "${workspaceFolder}/out/shared/Atlassian.Authentication.Helper/bin/Debug/netcoreapp3.0/Atlassian.Authentication.Helper.dll",
+            "args": [
+                "--prompt", "authcode", 
+                "--host", "http://bitbucket.org"
+            ],
+            "cwd": "${workspaceFolder}/out/shared/Git-Credential-Manager",
+            "env": {"GCM_TRACE":"1","GIT_TRACE":"1"},
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+        },
+        {
+            "name": "Atlassian.Authentication.Helper --prompt userpass --host=http://bitbucket.org",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            // If you have changed target frameworks, make sure to update the program path.
+            "program": "${workspaceFolder}/out/shared/Atlassian.Authentication.Helper/bin/Debug/netcoreapp3.0/Atlassian.Authentication.Helper.dll",
+            "args": [
+                "--prompt", "userpass", 
+                "--host", "http://bitbucket.org"
+            ],
+            "cwd": "${workspaceFolder}/out/shared/Git-Credential-Manager",
+            "env": {"GCM_TRACE":"1","GIT_TRACE":"1"},
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+        },
+        {
+            "name": "Atlassian.Authentication.Helper --prompt userpass",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            // If you have changed target frameworks, make sure to update the program path.
+            "program": "${workspaceFolder}/out/shared/Atlassian.Authentication.Helper/bin/Debug/netcoreapp3.0/Atlassian.Authentication.Helper.dll",
             "args": ["--prompt", "userpass"],
             "cwd": "${workspaceFolder}/out/shared/Git-Credential-Manager",
             "env": {"GCM_TRACE":"1","GIT_TRACE":"1"},

@@ -6,21 +6,19 @@ using Bitbucket;
 using Bitbucket.BasicAuth;
 using Microsoft.Git.CredentialManager;
 
-namespace Atlassian_Authentication_Helper_App.ViewModels
+namespace Atlassian.Authentication.Helper.ViewModels
 {
-    public class UserPassViewModel : ReactiveObject, IAuthViewModel
+    public class UserPassViewModel : AbstractAuthViewModel
     {
-        public event EventHandler ExitEvent;
-
-        private Dictionary<string, string> _output = new Dictionary<string, string>();
-
-        public UserPassViewModel(CommandContext context)
+        public UserPassViewModel(string hostUrl, CommandContext context) : base(hostUrl)
         {
+            var targetUri = new Uri(hostUrl);
+            context.Settings.RemoteUri = targetUri;
+
             var authenticator = new BasicAuthAuthenticator(context);
 
             LoginCommand = ReactiveCommand.Create<object>(async param =>
             {
-                var targetUri = new Uri("https://bitbucket.org");
                 var scopes = BitbucketHostProvider.BitbucketCredentialScopes;
                 // TODO validate credentials
                 var result = await authenticator.AcquireTokenAsync(
@@ -36,6 +34,12 @@ namespace Atlassian_Authentication_Helper_App.ViewModels
 
                     Success = true;
                 }
+                else if (result.Type == AuthenticationResultType.TwoFactor)
+                {
+                    context.Trace.WriteLine($"Token acquisition for '{targetUri}' failed");
+                    _output.Add("authentication", "2fa");
+                    Success = false;
+                }
                 else
                 {
                     context.Trace.WriteLine($"Token acquisition for '{targetUri}' failed");
@@ -50,14 +54,6 @@ namespace Atlassian_Authentication_Helper_App.ViewModels
                 Success = false;
                 Exit();
             });
-        }
-
-        public void Exit()
-        {
-            if (ExitEvent != null)
-            {
-                ExitEvent(this, new EventArgs());
-            }
         }
 
         private string _username;
@@ -79,14 +75,5 @@ namespace Atlassian_Authentication_Helper_App.ViewModels
         public ReactiveCommand<object, Unit> LoginCommand { get; }
 
         public ReactiveCommand<object, Unit> CancelCommand { get; }
-
-        public Dictionary<string,string> Output {
-            get
-            {
-                return _output;
-            }
-        }
-
-        public bool Success { get; private set; }
     }
 }

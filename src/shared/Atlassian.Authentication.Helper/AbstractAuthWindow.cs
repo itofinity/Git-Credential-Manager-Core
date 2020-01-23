@@ -1,6 +1,6 @@
 using Avalonia.Controls;
 
-namespace Atlassian_Authentication_Helper_App
+namespace Atlassian.Authentication.Helper
 {
     public abstract class AbstractAuthWindow : Window, IAuthWindow
     {

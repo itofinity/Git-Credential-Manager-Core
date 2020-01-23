@@ -1,7 +1,7 @@
 using Avalonia;
 using Avalonia.Markup.Xaml;
 
-namespace Atlassian_Authentication_Helper_App
+namespace Atlassian.Authentication.Helper
 {
     public class App : Application
     {
