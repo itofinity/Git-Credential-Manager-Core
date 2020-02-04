@@ -5,6 +5,7 @@ using ReactiveUI;
 using Bitbucket;
 using Bitbucket.BasicAuth;
 using Microsoft.Git.CredentialManager;
+using Bitbucket.Auth;
 
 namespace Atlassian.Authentication.Helper.ViewModels
 {
@@ -22,8 +23,8 @@ namespace Atlassian.Authentication.Helper.ViewModels
                 var scopes = BitbucketHostProvider.BitbucketCredentialScopes;
                 // TODO validate credentials
                 var result = await authenticator.AcquireTokenAsync(
-                targetUri, scopes, 
-                new GitCredential(_username, _password));
+                    targetUri, scopes, 
+                    new BaseAuthCredential(_username, _password));
 
                 if (result.Type == AuthenticationResultType.Success)
                 {
@@ -31,6 +32,7 @@ namespace Atlassian.Authentication.Helper.ViewModels
                     
                     _output.Add("username", result.Token.UserName);
                     _output.Add("password", result.Token.Password);
+                    _output.Add("scheme", result.Token.Scheme);
 
                     Success = true;
                 }

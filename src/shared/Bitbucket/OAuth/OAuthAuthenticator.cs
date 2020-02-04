@@ -35,7 +35,7 @@ namespace Bitbucket.OAuth
         }
 
 
-        public async Task<AuthenticationResult> AcquireTokenAsync(Uri targetUri, IEnumerable<string> scopes, ICredential credentials)
+        public async Task<AuthenticationResult> AcquireTokenAsync(Uri targetUri, IEnumerable<string> scopes, IExtendedCredential credentials)
         {
             var oauth = GetAuthenticator();
             try

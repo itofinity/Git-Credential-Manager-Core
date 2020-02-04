@@ -63,6 +63,11 @@ namespace Microsoft.Git.CredentialManager
         string LegacyAuthorityOverride { get; }
 
         /// <summary>
+        /// Get additional paths to check for GUI helper apps.
+        /// </summary>
+        string AuthGuiHelperPaths { get; }
+
+        /// <summary>
         /// True if Windows Integrated Authentication (NTLM, Kerberos) should be detected and used if available, false otherwise.
         /// </summary>
         bool IsWindowsIntegratedAuthenticationEnabled { get; }
@@ -130,6 +135,10 @@ namespace Microsoft.Git.CredentialManager
 
         public bool IsWindowsIntegratedAuthenticationEnabled =>
             TryGetSetting(KnownEnvars.GcmAllowWia, GitCredCfg.SectionName, GitCredCfg.AllowWia, out string value) && value.ToBooleanyOrDefault(true);
+
+        public string AuthGuiHelperPaths =>
+            TryGetSetting(KnownEnvars.GcmAuthGuiHelperPaths, GitCredCfg.SectionName, GitCredCfg.AuthGuiHelperPaths, out string value) ? value : null;
+
 
         public bool IsCertificateVerificationEnabled
         {

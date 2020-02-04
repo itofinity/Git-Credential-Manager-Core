@@ -44,6 +44,7 @@ using Newtonsoft.Json.Linq;
 using Microsoft.Git.CredentialManager;
 using RestSharp;
 using OpenSSL.PrivateKeyDecoder;
+using Bitbucket.Auth;
 
 namespace Bitbucket.OAuth.v1
 {
@@ -90,7 +91,7 @@ namespace Bitbucket.OAuth.v1
 
         public string TokenUrl { get { return "plugins/servlet/oauth/request-token"; } }
 
-        public async Task<AuthenticationResult> AcquireTokenAsync(Uri targetUri, IEnumerable<string> scopes, ICredential credentials)
+        public async Task<AuthenticationResult> AcquireTokenAsync(Uri targetUri, IEnumerable<string> scopes, IExtendedCredential credentials)
         {
             var result = await GetAuthAsync(targetUri, scopes, CancellationToken.None);
 
@@ -325,7 +326,7 @@ namespace Bitbucket.OAuth.v1
             var pat = json["token"];
 
             // TODO username
-            return new AuthenticationResult(AuthenticationResultType.Success, new GitCredential("", pat.Value<string>()), userSlug);
+            return new AuthenticationResult(AuthenticationResultType.Success, new BearerCredential("", pat.Value<string>()), userSlug);
         }
 
         /// <summary>
@@ -497,7 +498,7 @@ namespace Bitbucket.OAuth.v1
             return content;
         }
 
-        private GitCredential FindAccessToken(string responseText)
+        private IExtendedCredential FindAccessToken(string responseText)
         {
             Match tokenMatch;
             if ((tokenMatch = AccessTokenTokenRegex.Match(responseText)).Success
@@ -505,13 +506,13 @@ namespace Bitbucket.OAuth.v1
             {
                 string tokenText = tokenMatch.Groups[1].Value;
                 // TODO username
-                return new GitCredential("",tokenText);
+                return new BearerCredential("",tokenText);
             }
 
             return null;
         }
 
-        private GitCredential FindRefreshToken(string responseText)
+        private IExtendedCredential FindRefreshToken(string responseText)
         {
             Match refreshTokenMatch;
             if ((refreshTokenMatch = RefreshTokenRegex.Match(responseText)).Success
@@ -519,13 +520,13 @@ namespace Bitbucket.OAuth.v1
             {
                 string refreshTokenText = refreshTokenMatch.Groups[1].Value;
                 // TODO username
-                return new GitCredential("", refreshTokenText);
+                return new BearerCredential("", refreshTokenText);
             }
 
             return null;
         }
 
-        private AuthenticationResult GetAuthenticationResult(GitCredential token, GitCredential refreshToken)
+        private AuthenticationResult GetAuthenticationResult(IExtendedCredential token, IExtendedCredential refreshToken)
         {
             // Bitbucket should always return both.
             if (token == null || refreshToken == null)

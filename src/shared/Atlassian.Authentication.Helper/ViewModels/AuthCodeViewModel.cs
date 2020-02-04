@@ -5,6 +5,7 @@ using ReactiveUI;
 using Microsoft.Git.CredentialManager;
 using Bitbucket;
 using Bitbucket.OAuth;
+using Bitbucket.Auth;
 
 namespace Atlassian.Authentication.Helper.ViewModels
 {
@@ -24,7 +25,7 @@ namespace Atlassian.Authentication.Helper.ViewModels
 
                 AuthenticationResult result = await authenticator.AcquireTokenAsync(
                     targetUri, scopes, 
-                    new GitCredential("not used", "anywhere"));
+                    new ExtendedCredential("not used", "anywhere", "at all"));
 
                 if (result.Type == AuthenticationResultType.Success)
                 {

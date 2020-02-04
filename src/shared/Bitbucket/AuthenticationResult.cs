@@ -25,6 +25,7 @@
 
 using System.Diagnostics;
 using Microsoft.Git.CredentialManager;
+using Bitbucket.Auth;
 
 namespace Bitbucket
 {
@@ -50,7 +51,7 @@ namespace Bitbucket
             RemoteUsername = username;
         }
 
-        public AuthenticationResult(AuthenticationResultType type, GitCredential token)
+        public AuthenticationResult(AuthenticationResultType type, IExtendedCredential token)
         {
             Type = type;
             Token = token;
@@ -58,7 +59,7 @@ namespace Bitbucket
             RemoteUsername = null;
         }
 
-        public AuthenticationResult(AuthenticationResultType type, GitCredential token, string username)
+        public AuthenticationResult(AuthenticationResultType type, IExtendedCredential token, string username)
         {
             Type = type;
             Token = token;
@@ -66,8 +67,8 @@ namespace Bitbucket
             RemoteUsername = username;
         }
 
-        public AuthenticationResult(AuthenticationResultType type, GitCredential accessToken,
-            GitCredential refreshToken)
+        public AuthenticationResult(AuthenticationResultType type, IExtendedCredential accessToken,
+            IExtendedCredential refreshToken)
         {
             Type = type;
             Token = accessToken;
@@ -75,8 +76,8 @@ namespace Bitbucket
             RemoteUsername = null;
         }
 
-        public AuthenticationResult(AuthenticationResultType type, GitCredential accessToken,
-            GitCredential refreshToken, string remoteUsername)
+        public AuthenticationResult(AuthenticationResultType type, IExtendedCredential accessToken,
+            IExtendedCredential refreshToken, string remoteUsername)
         {
             Type = type;
             Token = accessToken;
@@ -85,8 +86,8 @@ namespace Bitbucket
         }
 
         public readonly AuthenticationResultType Type;
-        public GitCredential Token { get; internal set; }
-        public GitCredential RefreshToken { get; internal set; }
+        public IExtendedCredential Token { get; internal set; }
+        public IExtendedCredential RefreshToken { get; internal set; }
         public string RemoteUsername { get; internal set; }
 
         /// <summary>

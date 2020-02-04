@@ -35,6 +35,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Git.CredentialManager;
 using System.Runtime.InteropServices;
+using Bitbucket.Auth;
 
 namespace Bitbucket.OAuth.v2
 {
@@ -66,7 +67,7 @@ namespace Bitbucket.OAuth.v2
 
         public string TokenUri { get { return "/site/oauth2/access_token"; } }
 
-        public async Task<AuthenticationResult> AcquireTokenAsync(Uri targetUri, IEnumerable<string> scopes, ICredential credentials)
+        public async Task<AuthenticationResult> AcquireTokenAsync(Uri targetUri, IEnumerable<string> scopes, IExtendedCredential credentials)
         {
             return await GetAuthAsync(targetUri, scopes, CancellationToken.None);
         }
@@ -337,7 +338,7 @@ namespace Bitbucket.OAuth.v2
             return content;
         }
 
-        private GitCredential FindAccessToken(string responseText)
+        private IExtendedCredential FindAccessToken(string responseText)
         {
             Match tokenMatch;
             if ((tokenMatch = AccessTokenTokenRegex.Match(responseText)).Success
@@ -345,13 +346,13 @@ namespace Bitbucket.OAuth.v2
             {
                 string tokenText = tokenMatch.Groups[1].Value;
                 // TODO username
-                return new GitCredential("", tokenText);
+                return new BearerCredential("", tokenText);
             }
 
             return null;
         }
 
-        private GitCredential FindRefreshToken(string responseText)
+        private IExtendedCredential FindRefreshToken(string responseText)
         {
             Match refreshTokenMatch;
             if ((refreshTokenMatch = RefreshTokenRegex.Match(responseText)).Success
@@ -359,13 +360,13 @@ namespace Bitbucket.OAuth.v2
             {
                 string refreshTokenText = refreshTokenMatch.Groups[1].Value;
                 // TODO username
-                return new GitCredential("", refreshTokenText);
+                return new BearerCredential("", refreshTokenText);
             }
 
             return null;
         }
 
-        private AuthenticationResult GetAuthenticationResult(GitCredential token, GitCredential refreshToken)
+        private AuthenticationResult GetAuthenticationResult(IExtendedCredential token, IExtendedCredential refreshToken)
         {
             // Bitbucket should always return both.
             if (token == null || refreshToken == null)

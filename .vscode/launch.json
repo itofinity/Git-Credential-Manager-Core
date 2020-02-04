@@ -61,7 +61,7 @@
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
             "program": "${workspaceFolder}/out/shared/Git-Credential-Manager/bin/Debug/netcoreapp3.0/git-credential-manager-core.dll",
-            "args": ["get", "--debug-input=host=localhost:7990\nprotocol=http\npath=bitbucket\n\n"],
+            "args": ["get", "--debug-input=host=localhost:7990\nprotocol=http\npath=bitbucket/scm/project_1/projectone.git\nprovider=bitbucket\n\n"],
             "cwd": "${workspaceFolder}/out/shared/Git-Credential-Manager",
             "env": {"GCM_TRACE":"1","GIT_TRACE":"1"},
             "console": "integratedTerminal",
@@ -120,6 +120,22 @@
             // If you have changed target frameworks, make sure to update the program path.
             "program": "${workspaceFolder}/out/shared/Atlassian.Authentication.Helper/bin/Debug/netcoreapp3.0/Atlassian.Authentication.Helper.dll",
             "args": ["--prompt", "userpass"],
+            "cwd": "${workspaceFolder}/out/shared/Git-Credential-Manager",
+            "env": {"GCM_TRACE":"1","GIT_TRACE":"1"},
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+        },
+        {
+            "name": "Atlassian.Authentication.Helper --prompt userpass --host=http://localhost:7990/bitbucket",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            // If you have changed target frameworks, make sure to update the program path.
+            "program": "${workspaceFolder}/out/shared/Atlassian.Authentication.Helper/bin/Debug/netcoreapp3.0/Atlassian.Authentication.Helper.dll",
+            "args": [
+                "--prompt", "userpass", 
+                "--host", "http://localhost:7990/bitbucket"
+            ],
             "cwd": "${workspaceFolder}/out/shared/Git-Credential-Manager",
             "env": {"GCM_TRACE":"1","GIT_TRACE":"1"},
             "console": "integratedTerminal",

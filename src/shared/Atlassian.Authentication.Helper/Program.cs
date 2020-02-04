@@ -1,4 +1,10 @@
 ﻿using System.Linq;
+using System;
+using System.Diagnostics;
+using System.IO;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Atlassian.Authentication.Helper.ViewModels;
 using Atlassian.Authentication.Helper.Views;
 using Avalonia;
@@ -50,11 +56,14 @@ namespace Atlassian.Authentication.Helper
 
                         using (var context = new CommandContext())
                         {
+                            // Enable tracing
+                            ConfigureTrace(context);
+
                             var viewModel = GetViewModel(prompt, hostUrl, context);
                             var window = GetWindow(viewModel);
                             app.Run(window);
 
-                            if (viewModel.Output != null 
+                            if (viewModel.Output != null
                                     && viewModel.Output.Any())
                             {
                                 context.Streams.Out.WriteDictionary(viewModel.Output);
@@ -65,6 +74,35 @@ namespace Atlassian.Authentication.Helper
                     });
 
             var result = cla.Execute(args);
+        }
+
+        private static void ConfigureTrace(CommandContext context)
+        {
+            if (context.Settings.GetTracingEnabled(out string traceValue))
+            {
+                if (traceValue.IsTruthy()) // Trace to stderr
+                {
+                    context.Trace.AddListener(context.Streams.Error);
+                }
+                else if (Path.IsPathRooted(traceValue)) // Trace to a file
+                {
+                    try
+                    {
+                        Stream stream = context.FileSystem.OpenFileStream(traceValue, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
+                        TextWriter _traceFileWriter = new StreamWriter(stream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false), 4096, leaveOpen: false);
+
+                        context.Trace.AddListener(_traceFileWriter);
+                    }
+                    catch (Exception ex)
+                    {
+                        context.Streams.Error.WriteLine($"warning: unable to trace to file '{traceValue}': {ex.Message}");
+                    }
+                }
+                else
+                {
+                    context.Streams.Error.WriteLine($"warning: unknown value for {Constants.EnvironmentVariables.GcmTrace} '{traceValue}'");
+                }
+            }
         }
 
         private static IAuthViewModel GetViewModel(string prompt, string hostUrl, CommandContext context)

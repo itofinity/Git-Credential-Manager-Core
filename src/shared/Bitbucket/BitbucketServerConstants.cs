@@ -13,6 +13,7 @@ namespace Bitbucket
 
         public static class TokenScopes
         {
+            public const string ProjectRead = "PROJECT_READ";
             public const string RepositoryWrite = "REPO_WRITE";
         }
 

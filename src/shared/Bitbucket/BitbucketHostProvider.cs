@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.Git.CredentialManager;
 using Bitbucket.BasicAuth;
 using Bitbucket.OAuth;
+using Bitbucket.Auth;
 using GitCredCfg  = Microsoft.Git.CredentialManager.Constants.GitConfiguration.Credential;
 
 namespace Bitbucket
@@ -18,6 +19,7 @@ namespace Bitbucket
 
         public static readonly string[] BitbucketServerCredentialScopes =
         {
+            BitbucketServerConstants.TokenScopes.ProjectRead,
             BitbucketServerConstants.TokenScopes.RepositoryWrite
         };
 
@@ -93,14 +95,14 @@ TODO auto refresh
             if(!useOAuth)
             {
                 // ask user for credentials
-                ICredential credentials = await _bitbucketAuth.GetCredentialsAsync(targetUri);
+                AuthenticationResult result = await _bitbucketAuth.GetCredentialsAsync(targetUri, Scopes);
 
                 // BbC or BbS with out 2FA configured at the client
                 //AuthenticationResult result = await _bitbucketApi.AcquireTokenAsync(
                 //targetUri, credentials.UserName, credentials.Password, "", BitbucketServerCredentialScopes);
-                AuthenticationResult result = await _basicAuthAuthenticator.AcquireTokenAsync(
-                targetUri, Scopes, 
-                credentials);
+                //AuthenticationResult result = await _basicAuthAuthenticator.AcquireTokenAsync(
+                //targetUri, Scopes, 
+                //credentials);
 
                 if (result.Type == AuthenticationResultType.Success)
                 {
@@ -128,7 +130,7 @@ TODO auto refresh
                     AuthenticationResult result = await _oauthAuthenticator.AcquireTokenAsync(
                                                     targetUri, 
                                                     Scopes, 
-                                                    new GitCredential("not used", "anywhere"));
+                                                    new ExtendedCredential("not used", "anywhere", "at all"));
 
                     if (result.Type == AuthenticationResultType.Success)
                     {
@@ -191,11 +193,15 @@ TODO auto refresh
 
         private static Uri GetTargetUri(InputArguments input)
         {
+            var path = input.Path != null && input.Path.ToLower().Contains("/scm/")
+                ? input.Path.Substring(0, input.Path.IndexOf("/scm/")) 
+                : input.Path;
+
             UriBuilder uriBuilder = new UriBuilder
             {
                 Scheme = input.Protocol,
                 Host = input.CleanHost,
-                Path = input.Path
+                Path = path
             };
             
             if(input.Port.HasValue)

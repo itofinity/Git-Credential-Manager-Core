@@ -45,11 +45,12 @@ namespace Microsoft.Git.CredentialManager
             string schemeAndDelim = $"{uri.Scheme}{Uri.SchemeDelimiter}";
             string host = uri.Host.TrimEnd('/');
             string path = uri.AbsolutePath.Trim('/');
+            string port = uri.AbsoluteUri.Contains($":{uri.Port}") ? $":{uri.Port}" : string.Empty;
 
             // Unfold the path by component, right-to-left
             while (!string.IsNullOrWhiteSpace(path))
             {
-                yield return $"{schemeAndDelim}{host}/{path}";
+                yield return $"{schemeAndDelim}{host}{port}/{path}";
 
                 // Trim off the last path component
                 if (!TryTrimString(path, StringExtensions.TruncateFromLastIndexOf, '/', out path))
@@ -64,7 +65,7 @@ namespace Microsoft.Git.CredentialManager
                 if (host.Contains(".")
                     || host.Equals("localhost", StringComparison.InvariantCultureIgnoreCase)) // Do not emit just the TLD
                 {
-                    yield return $"{schemeAndDelim}{host}";
+                    yield return $"{schemeAndDelim}{host}{port}";
                 }
 
                 // Trim off the left-most sub-domain

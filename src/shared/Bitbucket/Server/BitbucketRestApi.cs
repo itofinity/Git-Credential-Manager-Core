@@ -10,6 +10,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Git.CredentialManager;
+using Bitbucket.Auth;
 using static System.StringComparer;
 
 namespace Bitbucket.Server
@@ -34,8 +35,12 @@ namespace Bitbucket.Server
 
         public async Task<AuthenticationResult> AcquireTokenAsync(Uri targetUri, string username, string password, string authenticationCode, IEnumerable<string> scopes)
         {
-            Uri requestUri = GetAuthenticationRequestUri(targetUri, username);
-            string base64Cred = new GitCredential(username, password).ToBase64String();
+            return await AcquireTokenAsync(targetUri, new ExtendedCredential(username, password, Constants.Http.WwwAuthenticateBasicScheme), scopes);
+        }
+
+        public async Task<AuthenticationResult> AcquireTokenAsync(Uri targetUri, IExtendedCredential credentials, IEnumerable<string> scopes)
+        {
+            Uri requestUri = GetAuthenticationRequestUri(targetUri, credentials.UserName);
 
             _context.Trace.WriteLine($"HTTP: POST {requestUri}");
             using (HttpContent content = GetTokenJsonContent(targetUri, scopes))
@@ -44,7 +49,7 @@ namespace Bitbucket.Server
                 // set content
                 request.Content = content;
                 // Set the auth header
-                request.Headers.Authorization = new AuthenticationHeaderValue(Constants.Http.WwwAuthenticateBasicScheme, base64Cred);
+                request.Headers.Authorization = new AuthenticationHeaderValue(credentials.Scheme, credentials.Token);
                 request.Headers.Add("Accept", "*/*");
 
                 using (var response = await HttpClient.SendAsync(request))
@@ -84,7 +89,7 @@ namespace Bitbucket.Server
 
         private async Task<AuthenticationResult> ParseSuccessResponseAsync(Uri targetUri, HttpResponseMessage response)
         {
-            GitCredential token = null;
+            IExtendedCredential token = null;
             string responseText = await response.Content.ReadAsStringAsync();
 
             Match tokenMatch;
@@ -96,7 +101,7 @@ namespace Bitbucket.Server
             {
                 var userName = tokenMatch.Groups[1].Value;
                 string tokenText = tokenMatch.Groups[2].Value;
-                token = new GitCredential(userName, tokenText);
+                token = new BearerCredential(userName, tokenText);
             }
 
             if (token == null)
@@ -197,6 +202,11 @@ namespace Bitbucket.Server
             }
         }
 
+        public Task<AuthenticationResult> AcquireUserDetailsAsync(Uri targetUri, string token)
+        {
+            throw new NotImplementedException();
+        }
+
         #endregion
 
         #region IDisposable
@@ -205,12 +215,7 @@ namespace Bitbucket.Server
         {
             _httpClient?.Dispose();
         }
-
-        public Task<AuthenticationResult> AcquireUserDetailsAsync(Uri targetUri, string token)
-        {
-            throw new NotImplementedException();
-        }
-
+        
         #endregion
     }
 }

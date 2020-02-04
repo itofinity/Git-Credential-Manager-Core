@@ -20,6 +20,7 @@ namespace Bitbucket.BasicAuth
 
         private static readonly string[] BitbucketServerCredentialScopes =
         {
+            BitbucketServerConstants.TokenScopes.ProjectRead,
             BitbucketServerConstants.TokenScopes.RepositoryWrite
         };
 
@@ -37,7 +38,7 @@ namespace Bitbucket.BasicAuth
             _bitbucketApi = new Cloud.BitbucketRestApi(context);
 
         }
-        public async Task<AuthenticationResult> AcquireTokenAsync(Uri targetUri, IEnumerable<string> scopes, ICredential credentials)
+        public async Task<AuthenticationResult> AcquireTokenAsync(Uri targetUri, IEnumerable<string> scopes, IExtendedCredential credentials)
         {
             if (targetUri.AbsoluteUri.Contains("bitbucket.org")/* TODO Rest.Cloud.RestClient.IsAcceptableUri(targetUri)*/)
             {
@@ -49,15 +50,15 @@ namespace Bitbucket.BasicAuth
             }
         }
 
-        private async Task<AuthenticationResult> GetServerAuthAsync(Uri targetUri, IEnumerable<string> scopes, ICredential credentials)
+        private async Task<AuthenticationResult> GetServerAuthAsync(Uri targetUri, IEnumerable<string> scopes, IExtendedCredential credentials)
         {
             // Use the provided username and password and attempt a basic authentication request to a known REST API resource.
             //var result = await (new Rest.Server.RestClient(Context)).TryGetUser(targetUri, requestTimeout, restRootUrl, credentials);
             return await _bitbucketServerApi.AcquireTokenAsync(
-                targetUri, credentials.UserName, credentials.Password, "", BitbucketServerCredentialScopes);
+                targetUri, credentials, BitbucketServerCredentialScopes);
         }
 
-        public async Task<AuthenticationResult> GetCloudAuthAsync(Uri targetUri, IEnumerable<string> scopes, ICredential credentials)
+        public async Task<AuthenticationResult> GetCloudAuthAsync(Uri targetUri, IEnumerable<string> scopes, IExtendedCredential credentials)
         {
             return await _bitbucketApi.AcquireTokenAsync(
                 targetUri, credentials.UserName, credentials.Password, "", BitbucketCredentialScopes);

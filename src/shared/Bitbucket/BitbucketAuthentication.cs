@@ -5,12 +5,18 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Git.CredentialManager;
 using Microsoft.Git.CredentialManager.Authentication;
+using Bitbucket.Auth;
+using Bitbucket.BasicAuth;
 
 namespace Bitbucket
 {
     public class BitbucketAuthentication : AuthenticationBase, IBitbucketAuthentication
     {
-        public BitbucketAuthentication(CommandContext context) :base(context) { }
+        private BasicAuthAuthenticator _basicAuthAuthenticator;
+
+        public BitbucketAuthentication(CommandContext context) :base(context) { 
+            _basicAuthAuthenticator = new BasicAuthAuthenticator(context);
+        }
 
         public static readonly string[] AuthorityIds =
         {
@@ -19,23 +25,33 @@ namespace Bitbucket
             "bitbucketserver"
         };
 
-        public async Task<ICredential> GetCredentialsAsync(Uri targetUri)
+        public async Task<AuthenticationResult> GetCredentialsAsync(Uri targetUri, IEnumerable<string> scopes)
         {
-            string userName, password;
+            string userName, password, scheme;
 
             if (TryFindHelperExecutablePath(out string helperPath))
             {
-                IDictionary<string, string> resultDict = await InvokeHelperAsync(helperPath, "--prompt userpass", null);
+                IDictionary<string, string> resultDict = await InvokeHelperAsync(helperPath, $"--prompt userpass --host {targetUri}", null);
 
                 if (!resultDict.TryGetValue("username", out userName))
                 {
-                    throw new Exception("Missing username in response");
+                    Context.Trace.WriteLine("Missing username in response");
+                    return new AuthenticationResult(AuthenticationResultType.Failure);
                 }
 
                 if (!resultDict.TryGetValue("password", out password))
                 {
-                    throw new Exception("Missing password in response");
+                    Context.Trace.WriteLine("Missing password in response");
+                    return new AuthenticationResult(AuthenticationResultType.Failure);
                 }
+
+                if (!resultDict.TryGetValue("scheme", out scheme))
+                {
+                    Context.Trace.WriteLine("Missing scheme in response");
+                    return new AuthenticationResult(AuthenticationResultType.Failure);
+                }
+
+                return new AuthenticationResult(AuthenticationResultType.Success, new ExtendedCredential(userName, password, scheme));
             }
             else
             {
@@ -45,9 +61,14 @@ namespace Bitbucket
 
                 userName = Context.Terminal.Prompt("Username");
                 password = Context.Terminal.PromptSecret("Password");
-            }
+                scheme = Constants.Http.WwwAuthenticateBasicScheme; 
+                var credentials = new ExtendedCredential(userName, password, scheme);
 
-            return new GitCredential(userName, password);
+                return await _basicAuthAuthenticator.AcquireTokenAsync(
+                    targetUri, scopes, 
+                    credentials);
+  
+            }
         }
 
         public async Task<string> GetAuthenticationCodeAsync(Uri targetUri)
@@ -78,6 +99,25 @@ namespace Bitbucket
             }
 
             string executableDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            if (Context.Settings.AuthGuiHelperPaths is string guiHelperPaths) 
+            {
+                var paths = guiHelperPaths.Split(new char[] {',', ';'}, StringSplitOptions.RemoveEmptyEntries);
+                foreach(var possiblePath in paths)
+                {
+                    path = Path.Combine(executableDirectory, possiblePath, helperName);
+                    if (!Context.FileSystem.FileExists(path))
+                    {
+                        Context.Trace.WriteLine($"Did not find helper '{helperName}' in '{path}'");
+                    }
+                    else
+                    {
+                        Context.Trace.WriteLine($"Found helper '{helperName}' in '{path}'");
+                        return  true;
+                    }
+                }
+            }
+
+            
             path = Path.Combine(executableDirectory, helperName);
             if (!Context.FileSystem.FileExists(path))
             {

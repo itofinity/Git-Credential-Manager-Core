@@ -31,6 +31,7 @@ namespace Microsoft.Git.CredentialManager.Authentication
 
             // We flush the trace writers here so that the we don't stomp over the
             // authentication helper's messages.
+            Context.Trace.WriteLine($"Calling {path} {args}");
             Context.Trace.Flush();
 
             var process = Process.Start(procStartInfo);

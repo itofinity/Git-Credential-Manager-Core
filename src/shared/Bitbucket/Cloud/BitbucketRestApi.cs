@@ -10,6 +10,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Git.CredentialManager;
+using Bitbucket.Auth;
 using static System.StringComparer;
 
 namespace Bitbucket.Cloud
@@ -31,17 +32,20 @@ namespace Bitbucket.Cloud
             this._context = context;
         }
 
-
         public async Task<AuthenticationResult> AcquireTokenAsync(Uri targetUri, string username, string password, string authenticationCode, IEnumerable<string> scopes)
         {
+            return await AcquireTokenAsync(targetUri, new ExtendedCredential(username, password, Constants.Http.WwwAuthenticateBasicScheme), scopes);
+        }
+
+        public async Task<AuthenticationResult> AcquireTokenAsync(Uri targetUri, IExtendedCredential credentials, IEnumerable<string> scopes)
+        {
             using (HttpContent content = GetTokenJsonContent(targetUri, scopes))
-            using (var request = GetHttpRequestMessage(targetUri, username))
+            using (var request = GetHttpRequestMessage(targetUri, credentials.UserName))
             {
                 // set content
                 request.Content = content;
                 // Set the auth header
-                string base64Cred = new GitCredential(username, password).ToBase64String();
-                request.Headers.Authorization = new AuthenticationHeaderValue(Constants.Http.WwwAuthenticateBasicScheme, base64Cred);
+                request.Headers.Authorization = new AuthenticationHeaderValue(credentials.Scheme, credentials.Token);
                 request.Headers.Add("Accept", "*/*");
 
                 using (var response = await HttpClient.SendAsync(request))
@@ -102,7 +106,7 @@ namespace Bitbucket.Cloud
 
         private async Task<AuthenticationResult> ParseAquireTokenSuccessResponseAsync(Uri targetUri, HttpResponseMessage response)
         {
-            GitCredential token = null;
+            IExtendedCredential token = null;
             string responseText = await response.Content.ReadAsStringAsync();
 
             Match tokenMatch;
@@ -114,7 +118,7 @@ namespace Bitbucket.Cloud
             {
                 var userName = tokenMatch.Groups[1].Value;
                 string tokenText = tokenMatch.Groups[2].Value;
-                token = new GitCredential(userName, tokenText);
+                token = new BearerCredential(userName, tokenText);
             }
 
             if (token == null)
@@ -299,7 +303,7 @@ namespace Bitbucket.Cloud
             else
             {
                 _context.Trace.WriteLine($"Get user details for '{targetUri}' succeeded.");
-                return new AuthenticationResult(AuthenticationResultType.Success, new GitCredential(username, token));
+                return new AuthenticationResult(AuthenticationResultType.Success, new BaseAuthCredential(username, token));
             }
         }
 

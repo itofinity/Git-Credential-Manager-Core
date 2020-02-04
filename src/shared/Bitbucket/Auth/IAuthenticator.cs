@@ -7,7 +7,7 @@ using Microsoft.Git.CredentialManager;
 namespace Bitbucket.Auth
 {
     public interface IAuthenticator
-    {
-        Task<AuthenticationResult> AcquireTokenAsync(Uri targetUri, IEnumerable<string> scopes, ICredential credentials);    
+    {    
+        Task<AuthenticationResult> AcquireTokenAsync(Uri targetUri, IEnumerable<string> scopes, IExtendedCredential credentials);    
     }
 }

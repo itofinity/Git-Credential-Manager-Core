@@ -56,6 +56,8 @@ namespace Microsoft.Git.CredentialManager.Tests.Objects
 
         bool ISettings.IsCertificateVerificationEnabled => IsCertificateVerificationEnabled;
 
+        public string AuthGuiHelperPaths => throw new NotImplementedException();
+
         Uri ISettings.GetProxyConfiguration(out bool isDeprecatedConfiguration)
         {
             isDeprecatedConfiguration = IsDeprecatedProxyConfiguration;
