@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
+using Itofinity.Bitbucket.Authentication;
+using Itofinity.Bitbucket.Authentication.Auth;
+using Itofinity.Bitbucket.Authentication.BasicAuth;
 using Microsoft.Git.CredentialManager;
 using Microsoft.Git.CredentialManager.Authentication;
-using Bitbucket.Auth;
-using Bitbucket.BasicAuth;
 
 namespace Bitbucket
 {
@@ -14,8 +15,10 @@ namespace Bitbucket
     {
         private BasicAuthAuthenticator _basicAuthAuthenticator;
 
-        public BitbucketAuthentication(CommandContext context) :base(context) { 
-            _basicAuthAuthenticator = new BasicAuthAuthenticator(context);
+        public BitbucketAuthentication(CommandContext context) :base(context) 
+        { 
+            var BitbucketAuthContext = new BitbucketAuthContext(context);
+            _basicAuthAuthenticator = BitbucketAuthContext.GetBasicAuthAuthenticator();;
         }
 
         public static readonly string[] AuthorityIds =
@@ -91,7 +94,7 @@ namespace Bitbucket
         // HACK cut'n'paste from GitGHubAuthentication
         private bool TryFindHelperExecutablePath(out string path)
         {
-            string helperName = BitbucketConstants.AuthHelperName;
+            string helperName = "atlassian-authentication-helper"; //BitbucketConstants.AuthHelperName;
 
             if (PlatformUtils.IsWindows())
             {

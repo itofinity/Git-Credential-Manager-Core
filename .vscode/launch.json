@@ -12,6 +12,7 @@
             // If you have changed target frameworks, make sure to update the program path.
             "program": "${workspaceFolder}/out/shared/Git-Credential-Manager/bin/Debug/netcoreapp3.0/git-credential-manager-core.dll",
             "args": ["get"],
+            "env":{"GCM_GUI_HELPER_PATHS": "/Users/mminns/projects/github.com/itofinity/Atlassian-Authentication-Helper/src/Atlassian.Authentication.Helper/bin/Debug/netcoreapp3.0/osx-x64/publish/"},
             "cwd": "${workspaceFolder}/out/shared/Git-Credential-Manager",
             "console": "integratedTerminal",
             "stopAtEntry": false,

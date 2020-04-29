@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.Git.CredentialManager;
-using Bitbucket.Auth;
+using Itofinity.Bitbucket.Authentication.Auth;
 using System.Collections.Generic;
 
 namespace Bitbucket

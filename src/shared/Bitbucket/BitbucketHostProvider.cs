@@ -2,10 +2,13 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Git.CredentialManager;
-using Bitbucket.BasicAuth;
-using Bitbucket.OAuth;
-using Bitbucket.Auth;
+using Itofinity.Bitbucket.Authentication;
+using Itofinity.Bitbucket.Authentication.BasicAuth;
+using Itofinity.Bitbucket.Authentication.OAuth;
+using Itofinity.Bitbucket.Authentication.Auth;
 using GitCredCfg  = Microsoft.Git.CredentialManager.Constants.GitConfiguration.Credential;
+
+using BbAuthMsft = Itofinity.Bitbucket.Authentication.Helpers.Microsoft.Git.CredentialManager;
 
 namespace Bitbucket
 {
@@ -22,29 +25,13 @@ namespace Bitbucket
             BitbucketServerConstants.TokenScopes.ProjectRead,
             BitbucketServerConstants.TokenScopes.RepositoryWrite
         };
+        private readonly BitbucketAuthContext _bitbucketAuthContext;
 
-        //private readonly IBitbucketRestApi _bitbucketApi;
-        private readonly IBitbucketAuthentication _bitbucketAuth;
+        public BitbucketHostProvider(CommandContext context) : base(context)
+        { 
+            EnsureArgument.NotNull(context, nameof(context));
 
-        private readonly BasicAuthAuthenticator _basicAuthAuthenticator;
-        private readonly OAuthAuthenticator _oauthAuthenticator;
-
-        public BitbucketHostProvider(CommandContext context)
-            : this(context, new BasicAuthAuthenticator(context), new OAuthAuthenticator(context), new BitbucketAuthentication(context)) { }
-
-        public BitbucketHostProvider(ICommandContext context, BasicAuthAuthenticator basicAuthAuthenticator, 
-        OAuthAuthenticator oauthAuthenticator,
-        IBitbucketAuthentication bitbucketAuth)
-            : base(context)
-        {
-            EnsureArgument.NotNull(basicAuthAuthenticator, nameof(basicAuthAuthenticator));
-            EnsureArgument.NotNull(oauthAuthenticator, nameof(oauthAuthenticator));
-            EnsureArgument.NotNull(bitbucketAuth, nameof(bitbucketAuth));
-
-            //_bitbucketApi = bitbucketApi;
-            _basicAuthAuthenticator = basicAuthAuthenticator;
-            _oauthAuthenticator = oauthAuthenticator;
-            _bitbucketAuth = bitbucketAuth;
+            _bitbucketAuthContext = new BitbucketAuthContext(context);
         }
 
         public override string Id => Name.ToLower();
@@ -95,7 +82,7 @@ TODO auto refresh
             if(!useOAuth)
             {
                 // ask user for credentials
-                AuthenticationResult result = await _bitbucketAuth.GetCredentialsAsync(targetUri, Scopes);
+                AuthenticationResult result = await _bitbucketAuthContext.GetBitbucketAuthentication().GetCredentialsAsync(targetUri, Scopes);
 
                 // BbC or BbS with out 2FA configured at the client
                 //AuthenticationResult result = await _bitbucketApi.AcquireTokenAsync(
@@ -108,7 +95,7 @@ TODO auto refresh
                 {
                     Context.Trace.WriteLine($"Token acquisition for '{targetUri}' succeeded");
 
-                    return result.Token;
+                    return new GitCredential(result.Token.UserName, result.Token.Password);
                 }
 
                 if (result.Type == AuthenticationResultType.TwoFactor)
@@ -120,14 +107,14 @@ TODO auto refresh
 
             if(useOAuth)
             {
-                var authCode = await _bitbucketAuth.GetAuthenticationCodeAsync(targetUri);
+                var authCode = await _bitbucketAuthContext.GetBitbucketAuthentication().GetAuthenticationCodeAsync(targetUri);
 
                 // For BbC don't need and App Password/PAT as OAuth token can be used, so this only triggers if there is no GUI helper.
                 if(string.IsNullOrWhiteSpace(authCode))
                 {
                     Context.Terminal.WriteLine("Acquiring OAuth token for '{0}'...", targetUri); 
 
-                    AuthenticationResult result = await _oauthAuthenticator.AcquireTokenAsync(
+                    AuthenticationResult result = await _bitbucketAuthContext.GetOAuthAuthenticator().AcquireTokenAsync(
                                                     targetUri, 
                                                     Scopes, 
                                                     new ExtendedCredential("not used", "anywhere", "at all"));
@@ -145,11 +132,11 @@ TODO auto refresh
                 {
                     Context.Trace.WriteLine($"Token acquisition for '{targetUri}' succeeded");
 
-                    var usernameResult = await _oauthAuthenticator.AquireUserDetailsAsync(targetUri, authCode);
+                    var usernameResult = await _bitbucketAuthContext.GetOAuthAuthenticator().AquireUserDetailsAsync(targetUri, authCode);
 
                     if(usernameResult.IsSuccess)
                     {
-                        return usernameResult.Token;
+                        return new GitCredential(usernameResult.Token.UserName, usernameResult.Token.Password);
                     }
                 }
             }
