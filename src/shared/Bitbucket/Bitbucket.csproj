@@ -22,6 +22,7 @@
     <PackageReference Include="RestSharp" Version="106.6.10" />
     <PackageReference Include="System.Security.Cryptography.X509Certificates" Version="4.3.2" />
     <PackageReference Include="Itofinity.Bitbucket.Authentication" Version="0.1.0-ci-24" />
+    <PackageReference Include="Atlassian-Authentication-Helper-Executables" Version="0.1.0-snapshot" />
   </ItemGroup>
 
 </Project>

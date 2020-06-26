@@ -64,7 +64,8 @@ if [ ! -d "$MSAUTH_BIN" ]; then
 	die "No native helper binaries found. Did you build?"
 fi
 
-ATLASBBAUTH_BIN="$ATLASBBAUTH_OUT/bin/$CONFIGURATION/netcoreapp3.0/osx-x64/publish/"
+#ATLASBBAUTH_BIN="$ATLASBBAUTH_OUT/bin/$CONFIGURATION/netcoreapp3.0/osx-x64/publish/"
+ATLASBBAUTH_BIN="/Users/mminns/.nuget/packages/atlassian-authentication-helper-executables/0.1.0-snapshot/tools/osx-x64/"
 #ATLASBBAUTH_SYM="$ATLASBBAUTH_OUT/bin/$CONFIGURATION/netcoreapp3.0/osx-x64/publish/Atlassian.Authentication.Helper.pdb"
 if [ ! -d "$ATLASBBAUTH_BIN" ]; then
 	die "No bitbucket native helper binaries found. Did you build? $ATLASBBAUTH_BIN"
